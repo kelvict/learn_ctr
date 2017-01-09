@@ -251,7 +251,6 @@ def process_discrete_df(discrete_df, path_prefix="discrete", n_split=2,min_freq=
         gc.collect()
         one_hot_encoders.append(enc)
 
-    del label_encoders
     joblib.dump(one_hot_encoders, "%s.one_hot_encoders.pkl"%path_prefix)
     del one_hot_encoders
     gc.collect()

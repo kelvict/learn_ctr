@@ -215,7 +215,6 @@ def process_discrete_df(discrete_df, path_prefix="discrete", n_split=2,min_freq=
     #To handle NaN Here
     #discrete_df.fillnan("NAN")
 
-
     discrete_dfs = np.array_split(discrete_df, n_split, axis=1)
 
     log("Start to dump filtered discrete data")
@@ -226,17 +225,23 @@ def process_discrete_df(discrete_df, path_prefix="discrete", n_split=2,min_freq=
     gc.collect()
 
     log("Start to Label & One hot encode")
-    label_encoders = []
+
     one_hot_encoders = []
     for i in xrange(n_split):
         log("Handling split %d"%i)
-
+        label_encoders = []
         df = joblib.load("%s.filtered_discrete%d_in_%d.pkl"%(path_prefix, i, n_split))
         for col in xrange(df.shape[1]):
             log("Handling split %d, col %d"%(i, col))
             lbl_enc = LabelEncoder()
             df.iloc[:,col] = lbl_enc.fit_transform(df.iloc[:,col])
             label_encoders.append(lbl_enc)
+            gc.collect()
+        joblib.dump(label_encoders, "%s.discrete_label_encoders%d.pkl"%(path_prefix, i))
+        del label_encoders
+        gc.collect()
+
+        log("One hot encoding split %d, col %d"%(i, col))
         enc = OneHotEncoder(sparse=True, dtype=np.int32)
         df  = enc.fit_transform(df)
         df = df.tocoo()
@@ -245,7 +250,7 @@ def process_discrete_df(discrete_df, path_prefix="discrete", n_split=2,min_freq=
         del df
         gc.collect()
         one_hot_encoders.append(enc)
-    joblib.dump(label_encoders, "%s.discrete_label_encoders.pkl"%path_prefix)
+
     del label_encoders
     joblib.dump(one_hot_encoders, "%s.one_hot_encoders.pkl"%path_prefix)
     del one_hot_encoders

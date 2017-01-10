@@ -231,12 +231,12 @@ def process_discrete_df(discrete_df, path_prefix="discrete", n_split=2,min_freq=
         log("Handling split %d"%i)
         label_encoders = []
         df = joblib.load("%s.filtered_discrete%d_in_%d.pkl"%(path_prefix, i, n_split))
+        df = df.fillna("-")
         for col in xrange(df.shape[1]):
             log("Handling split %d, col %d"%(i, col))
             lbl_enc = LabelEncoder()
             df.iloc[:,col] = lbl_enc.fit_transform(df.iloc[:,col])
             label_encoders.append(lbl_enc)
-            gc.collect()
         joblib.dump(label_encoders, "%s.discrete_label_encoders%d.pkl"%(path_prefix, i))
         del label_encoders
         gc.collect()

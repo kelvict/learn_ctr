@@ -190,9 +190,14 @@ def process_contin_df(contin_df, path_prefix="discrete", n_interval=1000, n_spli
     process_discrete_df(contin_df, path_prefix, n_split, min_freq)
     log("End to process contin df")
 
-def process_discrete_df(discrete_df, path_prefix="discrete", n_split=2,min_freq=4000):
+def process_discrete_df(discrete_df, path_prefix="discrete", n_split=2, min_freq=4000, too_few_as_nan=False):
     log("Start to process discrete df")
     n_col = discrete_df.shape[1]
+
+    too_few_str = "TOO_FEW"
+    nan_str = "-"
+    if too_few_as_nan:
+        too_few_str = nan_str
 
     value_counts_arr = []
     log("Start to filter too few")
@@ -203,7 +208,7 @@ def process_discrete_df(discrete_df, path_prefix="discrete", n_split=2,min_freq=
         value_counts_arr.append(value_counts)
         too_few_keys = list(value_counts[value_counts<min_freq].index)
         enough_keys = list(value_counts[value_counts>=min_freq].index)
-        map_pairs = dict(zip(too_few_keys+enough_keys,["TOO_FEW"]*len(too_few_keys)+enough_keys))
+        map_pairs = dict(zip(too_few_keys+enough_keys,[too_few_str]*len(too_few_keys)+enough_keys))
         too_few_keys_arr.append(too_few_keys)
         discrete_df.iloc[:, col] = discrete_df.iloc[:, col].map(map_pairs)
     joblib.dump(value_counts_arr, "%s.discrete_value_counts_arr.pkl"%(path_prefix))
@@ -231,7 +236,8 @@ def process_discrete_df(discrete_df, path_prefix="discrete", n_split=2,min_freq=
         log("Handling split %d"%i)
         label_encoders = []
         df = joblib.load("%s.filtered_discrete%d_in_%d.pkl"%(path_prefix, i, n_split))
-        df = df.fillna("-")
+        df = df.fillna(nan_str)
+
         for col in xrange(df.shape[1]):
             log("Handling split %d, col %d"%(i, col))
             lbl_enc = LabelEncoder()
@@ -242,7 +248,7 @@ def process_discrete_df(discrete_df, path_prefix="discrete", n_split=2,min_freq=
         gc.collect()
 
         log("One hot encoding split %d, col %d"%(i, col))
-        enc = OneHotEncoder(sparse=True, dtype=np.int32)
+        enc = OneHotEncoder(sparse=True, dtype=np.float32)
         df  = enc.fit_transform(df)
         df = df.tocoo()
         log("End to fit&transform")

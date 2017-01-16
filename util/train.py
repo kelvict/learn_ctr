@@ -18,12 +18,6 @@ import json
 
 DTYPE = tf.float32
 
-OUTPUT_DIM = 1
-
-NAME_FIELD = {'weekday': 0, 'hour': 1, 'useragent': 2, 'IP': 3, 'region': 4, 'city': 5, 'adexchange': 6, 'domain': 7,
-              'slotid': 8, 'slotwidth': 9, 'slotheight': 10, 'slotvisibility': 11, 'slotformat': 12, 'creative': 13,
-              'advertiser': 14, 'slotprice': 15}
-
 STDDEV = 1e-3
 MINVAL = -1e-2
 MAXVAL = 1e-2

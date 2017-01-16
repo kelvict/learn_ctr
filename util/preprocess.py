@@ -75,7 +75,23 @@ def join_files(filenames, output_path, sep = " "):
 			fin.close()
 		fout.close()
 	except IOError,e:
-		log.log("Fuck! IOError")
+		log.log("IOError")
+
+def get_field_sizes_from_one_hot_encoders(one_hot_encoders):
+	field_sizes = []
+	for i in xrange(len(one_hot_encoders)):
+		field_idxs = one_hot_encoders[i].feature_indices_
+		for j in xrange(len(field_idxs)-1):
+			field_sizes.append(field_idxs[j+1]-field_idxs[j])
+	return field_sizes
+
+def get_field_idxs_from_field_size(field_sizes):
+	total_size = 0
+	field_idxs = [total_size]
+	for i in xrange(len(field_sizes)):
+		total_size = total_size + field_sizes[i]
+		field_idxs.append(total_size)
+	return field_idxs
 
 if __name__ == "__main__":
 	df = pd.DataFrame([range(10,20,1), range(20,30,1)])

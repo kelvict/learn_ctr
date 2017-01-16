@@ -9,7 +9,7 @@ import numpy as np
 import pandas.core.algorithms as algos
 import time
 import os
-from util import preprocess
+from util import preprocess as preprocess_util
 import gc
 from scipy import sparse
 from sklearn.externals import joblib
@@ -247,7 +247,7 @@ def process_discrete_df(discrete_df, path_prefix="discrete", n_split=2, min_freq
         del label_encoders
         gc.collect()
 
-        log("One hot encoding split %d, col %d"%(i, col))
+        log("One hot encoding split %d"%(i))
         enc = OneHotEncoder(sparse=True, dtype=np.float32)
         df  = enc.fit_transform(df)
         log("End to fit&transform")
@@ -255,6 +255,10 @@ def process_discrete_df(discrete_df, path_prefix="discrete", n_split=2, min_freq
         del df
         gc.collect()
         one_hot_encoders.append(enc)
+
+    field_sizes = preprocess_util.get_field_sizes_from_one_hot_encoders(one_hot_encoders)
+    joblib.dump(field_sizes, "%s.field_sizes.pkl"%path_prefix)
+    del field_sizes
 
     joblib.dump(one_hot_encoders, "%s.one_hot_encoders.pkl"%path_prefix)
     del one_hot_encoders
@@ -343,12 +347,12 @@ def process(raw_trainset, data_format="default", is_test=False, n_process = 1, c
     cur_time = time.strftime("%Y%m%d_%H%M%S")
 
     #discrete_df = discrete_df.apply(get_discrete_col_replacing_too_few_feats, axis=0)
-    discrete_df = preprocess.apply_by_multiprocessing(
+    discrete_df = preprocess_util.apply_by_multiprocessing(
         discrete_df, get_discrete_col_replacing_too_few_feats, axis = 0, processes=n_process)
     log("After get_discrete_col_replacing_too_few_feats")
     #discrete_df = discrete_df.apply(get_discrete_row_func, axis=1)
     discrete_feat_map = get_feat_map(discrete_df)
-    discrete_df = preprocess.apply_by_multiprocessing(
+    discrete_df = preprocess_util.apply_by_multiprocessing(
         discrete_df, get_discrete_row_func, axis = 1, processes=n_process, args=(discrete_feat_map,))
     log("After discrete_df.apply(get_discrete_value_with_feat_name_per_row, axis=1)")
     dump_df_to_path_omit_nan(discrete_df,raw_trainset+'.discrete_feats.%s.txt'%(data_format+"_format"), sep=item_sep, time=cur_time)
@@ -359,12 +363,12 @@ def process(raw_trainset, data_format="default", is_test=False, n_process = 1, c
     # should fill nan with means
     #contin_feat_means = load_contin_feat_means(contin_feat_means_path)
     #contin_df = contin_df.fillna(contin_feat_means)
-    discrete_contin_df = preprocess.apply_by_multiprocessing(
+    discrete_contin_df = preprocess_util.apply_by_multiprocessing(
         contin_df, get_discrete_col_from_contin_col, axis=0, processes=n_process)
     #discrete_contin_df = discrete_contin_df.apply(get_discrete_row_func, axis=1)
     discrete_contin_feat_map = get_feat_map(discrete_contin_df, discrete_feat_map.shape[0])
 
-    discrete_contin_df = preprocess.apply_by_multiprocessing(
+    discrete_contin_df = preprocess_util.apply_by_multiprocessing(
         discrete_contin_df, get_discrete_row_func, axis=1, processes=n_process, args=(discrete_contin_feat_map,))
     log("After discrete_contin_df.apply(get_discrete_value_with_feat_name_per_row, axis=1)")
     dump_df_to_path_omit_nan(
@@ -373,7 +377,7 @@ def process(raw_trainset, data_format="default", is_test=False, n_process = 1, c
 
     #contin_df = contin_df.apply(get_contin_row_func, axis=1)
     contin_feat_map = get_contin_feat_map(contin_df, discrete_feat_map.shape[0])
-    contin_df = preprocess.apply_by_multiprocessing(
+    contin_df = preprocess_util.apply_by_multiprocessing(
         contin_df,  get_contin_row_func, axis=1, processes=n_process, args=(contin_feat_map,))
     log("After contin_df = contin_df.apply(get_contin_value_with_feat_name_per_row, axis=1)")
     dump_df_to_path_omit_nan(contin_df,raw_trainset+'.contin_feats.%s.txt'%(data_format+"_format"),sep=item_sep, time=cur_time)

@@ -5,7 +5,30 @@
 import os
 import sys
 import time
+import json
+import logging
+
+log_format = '%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s'
+date_format = '%Y-%m-%d %H:%M:%S'
+
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+console.setFormatter(log_format)
+logging.getLogger("").addHandler(console)
+
+def config_log(log_path_prefix):
+    logging.basicConfig(level=logging.DEBUG,
+                format= log_format,
+                datefmt=date_format,
+                filename="%s.%s.log"%(log_path_prefix, time.strftime("%Y%m%d_%H%M%S")),
+                filemode='w')
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    console.setFormatter(log_format)
+    logging.getLogger("").addHandler(console)
 
 def log(msg):
-    print str(os.getpid())+'-[' + time.asctime( time.localtime(time.time()) ) + "] " + msg
-    sys.stdout.flush()
+    logging.info(str(msg))
+
+def pretty_print_json_obj(obj):
+    print json.dumps(obj, indent=4)

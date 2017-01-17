@@ -292,12 +292,15 @@ def preprocess(raw_trainset, is_test=False, n_split=2, discrete_min_freq=4000, n
     discrete_path_prefix = "%s.discrete_%d"%(path_prefix,discrete_min_freq)
     process_discrete_df(discrete_df, path_prefix=discrete_path_prefix, n_split=n_split, min_freq=discrete_min_freq)
     del discrete_df
+    gc.collect()
     log("End process discrete df")
     log("Load contin df cache")
     contin_df = joblib.load("%s.contin_df.pkl"%path_prefix)
     log("Start to process contin df")
     contin_discrete_path_prefix = "%s.contin_%d_%d"%(path_prefix, n_contin_intervals, contin_min_freq)
     process_contin_df(contin_df, path_prefix=contin_discrete_path_prefix, n_interval=n_contin_intervals, n_split=n_split, min_freq=contin_min_freq)
+    del contin_df
+    gc.collect()
     log("End process contin df")
     log("Start to hstack discrete contin sparse one hot mat with differenct split")
     log("loading discrete")

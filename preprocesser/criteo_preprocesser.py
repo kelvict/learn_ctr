@@ -307,10 +307,12 @@ def preprocess(raw_trainset, is_test=False, n_split=2, discrete_min_freq=4000, n
     contin_discrete_sparse_one_hot_mats = [joblib.load("%s.one_hot_discrete%d_in_%d.pkl"%(
         contin_discrete_path_prefix, i, n_split)) for i in xrange(n_split)]
     log("hstacking")
-    whole_mat = sparse.hstack(discrete_sparse_one_hot_mats+contin_discrete_sparse_one_hot_mats, format="csr")
+    whole_mat = sparse.hstack(discrete_sparse_one_hot_mats+contin_discrete_sparse_one_hot_mats)
     del discrete_sparse_one_hot_mats
     del contin_discrete_sparse_one_hot_mats
     gc.collect()
+    log("To CSR")
+    whole_mat = whole_mat.tocsr()
     log("Start to dump whole matrix")
     joblib.dump(whole_mat, "%s.discrete_%d_contin_%d_%d.whole_one_hot_csr.pkl"
                 %(path_prefix, discrete_min_freq, n_contin_intervals, contin_min_freq))

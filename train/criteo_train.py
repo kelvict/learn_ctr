@@ -6,7 +6,7 @@ from sklearn.externals import joblib
 from sklearn.metrics import roc_auc_score
 
 import numpy as np
-
+import json
 import util
 
 from model.product_nets import LR, FM, FNN, CCPM, PNN1, PNN2
@@ -25,7 +25,9 @@ def create_default_conf(dump_path, model_name=LR.__name__):
 			)
 	return None
 
-def train_model_with_conf(conf):
+def train_model_with_conf(conf_path):
+	fi = open(conf_path)
+	conf = json.load(fi)
 	for Model in CRITEO_MODELS:
 		if conf['model_name'] == Model.__name__:
 			field_sizes = joblib.load(conf['field_sizes_pkl_path'])

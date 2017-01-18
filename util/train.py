@@ -134,7 +134,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
           batch_size=256, train_set_percent = 0.75,
           should_split_by_field=False, field_sizes=None,
           should_early_stop=True, early_stop_interval=10, should_dump_model=False,
-          model_dump_path=""):
+          model_dump_path="", **kwargs):
     util.log.log("Start to train model")
     util.log.log("Loading trainset and labels")
     dataset = joblib.load(trainset_csr_pkl_path)

@@ -12,6 +12,7 @@ from scipy.sparse import coo_matrix
 from sklearn.metrics import roc_auc_score
 from sklearn.externals import joblib
 
+import pandas as pd
 import util
 
 import json
@@ -138,7 +139,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
     util.log.log("Start to train model")
     util.log.log("Loading trainset and labels")
     dataset = joblib.load(trainset_csr_pkl_path)
-    labels = joblib.load(labels_pkl_path)
+    labels = pd.read_csv(labels_pkl_path, header=None)
     train_set_size = int(train_set_percent * dataset.shape[0])
     train_set = dataset[:train_set_size]
     train_labels = labels[:train_set_size]

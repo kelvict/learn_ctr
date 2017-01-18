@@ -11,7 +11,7 @@ from scipy.sparse import coo_matrix
 
 from sklearn.metrics import roc_auc_score
 from sklearn.externals import joblib
-
+from sklearn.utils import shuffle as sklearn_shuffle
 import pandas as pd
 import util
 
@@ -148,7 +148,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
 
     train_data = (train_set, train_labels)
     util.log.log("Shuffling train_data")
-    train_data = util.train.shuffle(train_data)
+    train_data = sklearn_shuffle(train_data)
     test_data = (test_set, test_labels)
 
     if field_sizes is not None:

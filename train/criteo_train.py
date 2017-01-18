@@ -26,7 +26,7 @@ def create_default_conf(dump_path, model_name=LR.__name__):
 	return None
 
 def train_model_with_conf(conf):
-	for Model in xrange(CRITEO_MODELS):
+	for Model in CRITEO_MODELS:
 		if conf['model_name'] == Model.__name__:
 			field_sizes = joblib.load(conf['field_sizes_pkl_path'])
 			if Model in SPLIT_BY_FIELD_MODELS:

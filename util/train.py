@@ -133,7 +133,8 @@ def split_data_by_field(data, field_offsets):
 def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
           batch_size=256, train_set_percent = 0.75,
           should_split_by_field=False, field_sizes=None,
-          should_early_stop=True, early_stop_interval=10):
+          should_early_stop=True, early_stop_interval=10, should_dump_model=False,
+          model_dump_path=""):
     util.log.log("Start to train model")
     util.log.log("Loading trainset and labels")
     dataset = joblib.load(trainset_csr_pkl_path)
@@ -189,7 +190,9 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
         best_test_auc_epoch = np.argmax(history_test_auc)
         if should_early_stop and i - best_test_auc_epoch >= early_stop_interval and abs(history_test_auc[-1]-history_test_auc[best_test_auc_epoch]) < 1e-5:
             print "Early stop\nbest iteration:\n[%d]\teval-auc: %f"%(best_test_auc_epoch, history_test_auc[best_test_auc_epoch])
-            break #TODO TOFIX
+            break
+    if should_dump_model:
+        model.dump(model_dump_path)
 
 
 def init_var_map(init_vars, init_path=None):

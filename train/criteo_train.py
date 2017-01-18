@@ -28,6 +28,7 @@ def create_default_conf(dump_path, model_name=LR.__name__):
 def train_model_with_conf(conf_path):
 	fi = open(conf_path)
 	conf = json.load(fi)
+	fi.close()
 	for Model in CRITEO_MODELS:
 		if conf['model_name'] == Model.__name__:
 			field_sizes = joblib.load(conf['field_sizes_pkl_path'])

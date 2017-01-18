@@ -46,7 +46,9 @@ def create_conf(path, model_name="lr", model_params=None, **kwargs):
     }
     for key in kwargs:
         conf[key] = kwargs[key]
-    json.dump(conf, path, indent=True)
+    fo = open(path, 'w')
+    json.dump(conf, fo, indent=True)
+    fo.close()
     return conf
 
 def read_data(file_name, input_dim):

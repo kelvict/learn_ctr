@@ -15,7 +15,7 @@ from model.product_nets import LR, FM, FNN, CCPM, PNN1, PNN2
 CRITEO_MODELS = [LR, FM, FNN, CCPM, PNN1, PNN2]
 SPLIT_BY_FIELD_MODELS = [FNN, CCPM, PNN1, PNN2]
 def create_default_conf(dump_path, model_name=LR.__name__):
-	for Model in xrange(len(CRITEO_MODELS)):
+	for Model in CRITEO_MODELS:
 		if model_name == Model.__name__:
 			return util.train.create_conf(
 				dump_path, model_name, model_params=Model.default_params,

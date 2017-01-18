@@ -175,8 +175,8 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
             X, y = util.train.slice(train_data)
             _, loss = model.run(fetches, X, y)
             losses = [loss]
-        train_preds = model.run(model.y_prob, util.train.slice(train_data)[0])
-        test_preds = model.run(model.y_prob, util.train.slice(train_data)[0])
+        train_preds = model.run(model.y_prob, csr_2_input(train_data[0]))
+        test_preds = model.run(model.y_prob, csr_2_input(test_data[0]))
 
         train_score = roc_auc_score(train_data[1], train_preds)
         test_score = roc_auc_score(test_data[1], test_preds)

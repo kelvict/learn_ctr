@@ -241,3 +241,4 @@ tags
 # Ignore Data
 dataset/
 reference/
+log/*

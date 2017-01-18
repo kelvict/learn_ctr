@@ -309,11 +309,14 @@ def preprocess(raw_trainset, is_test=False, n_split=2, discrete_min_freq=4000, n
     log("loading contin")
     contin_discrete_sparse_one_hot_mats = [joblib.load("%s.one_hot_discrete%d_in_%d.pkl"%(
         contin_discrete_path_prefix, i, n_split)) for i in xrange(n_split)]
-    log("hstacking")
-    whole_mat = sparse.hstack(discrete_sparse_one_hot_mats+contin_discrete_sparse_one_hot_mats)
     del discrete_sparse_one_hot_mats
     del contin_discrete_sparse_one_hot_mats
     gc.collect()
+    log("Hstacking")
+    whole_mat = sparse.hstack(discrete_sparse_one_hot_mats+contin_discrete_sparse_one_hot_mats)
+    log("Dumping COO")
+    joblib.dump(whole_mat, "%s.discrete_%d_contin_%d_%d.whole_one_hot_coo.pkl"
+                %(path_prefix, discrete_min_freq, n_contin_intervals, contin_min_freq))
     log("To CSR")
     whole_mat = whole_mat.tocsr()
     log("Start to dump whole matrix")
@@ -322,75 +325,6 @@ def preprocess(raw_trainset, is_test=False, n_split=2, discrete_min_freq=4000, n
     del whole_mat
     gc.collect()
     log("End to hstack discrete contin sparse one hot mat with differenct split")
-
-def process(raw_trainset, data_format="default", is_test=False, n_process = 1, contin_feat_means_path=default_contin_feat_means_path):
-    log("Start to load and split dataset: " + raw_trainset)
-    labels, contin_df, discrete_df = get_labels_contin_discrete_feats(raw_trainset)
-    log("line "+str(labels.shape[0]))
-    log("Sep!")
-
-    if is_test:
-        labels = labels[:100]
-        contin_df = contin_df[:100]
-        discrete_df = discrete_df[:100]
-
-    item_sep = "\t"
-    if data_format == "default":
-        get_discrete_row_func = get_discrete_value_with_feat_name_per_row
-        get_contin_row_func = get_contin_value_with_feat_name_per_row
-    elif data_format == "libsvm":
-        get_discrete_row_func = get_discrete_value_with_feat_name_per_row_in_libsvm_format
-        get_contin_row_func = get_contin_value_with_feat_name_per_row_in_libsvm_format
-        item_sep = " "
-    else:
-        raise AttributeError("Get wrong data format "+str(data_format))
-
-    dump_col(labels,raw_trainset+'.labels.txt')
-    del labels
-    log("Label Dumped")
-
-    cur_time = time.strftime("%Y%m%d_%H%M%S")
-
-    #discrete_df = discrete_df.apply(get_discrete_col_replacing_too_few_feats, axis=0)
-    discrete_df = preprocess_util.apply_by_multiprocessing(
-        discrete_df, get_discrete_col_replacing_too_few_feats, axis = 0, processes=n_process)
-    log("After get_discrete_col_replacing_too_few_feats")
-    #discrete_df = discrete_df.apply(get_discrete_row_func, axis=1)
-    discrete_feat_map = get_feat_map(discrete_df)
-    discrete_df = preprocess_util.apply_by_multiprocessing(
-        discrete_df, get_discrete_row_func, axis = 1, processes=n_process, args=(discrete_feat_map,))
-    log("After discrete_df.apply(get_discrete_value_with_feat_name_per_row, axis=1)")
-    dump_df_to_path_omit_nan(discrete_df,raw_trainset+'.discrete_feats.%s.txt'%(data_format+"_format"), sep=item_sep, time=cur_time)
-    del discrete_df
-
-    #discrete_contin_df = contin_df.fillna(load_contin_feat_means(default_contin_feat_means_path))\
-    #                              .apply(get_discrete_col_from_contin_col, axis=0)
-    # should fill nan with means
-    #contin_feat_means = load_contin_feat_means(contin_feat_means_path)
-    #contin_df = contin_df.fillna(contin_feat_means)
-    discrete_contin_df = preprocess_util.apply_by_multiprocessing(
-        contin_df, get_discrete_col_from_contin_col, axis=0, processes=n_process)
-    #discrete_contin_df = discrete_contin_df.apply(get_discrete_row_func, axis=1)
-    discrete_contin_feat_map = get_feat_map(discrete_contin_df, discrete_feat_map.shape[0])
-
-    discrete_contin_df = preprocess_util.apply_by_multiprocessing(
-        discrete_contin_df, get_discrete_row_func, axis=1, processes=n_process, args=(discrete_contin_feat_map,))
-    log("After discrete_contin_df.apply(get_discrete_value_with_feat_name_per_row, axis=1)")
-    dump_df_to_path_omit_nan(
-        discrete_contin_df,raw_trainset+'.discrete_contin_feats.%s.txt'%(data_format+"_format"),sep=item_sep, time=cur_time)
-    del discrete_contin_df
-
-    #contin_df = contin_df.apply(get_contin_row_func, axis=1)
-    contin_feat_map = get_contin_feat_map(contin_df, discrete_feat_map.shape[0])
-    contin_df = preprocess_util.apply_by_multiprocessing(
-        contin_df,  get_contin_row_func, axis=1, processes=n_process, args=(contin_feat_map,))
-    log("After contin_df = contin_df.apply(get_contin_value_with_feat_name_per_row, axis=1)")
-    dump_df_to_path_omit_nan(contin_df,raw_trainset+'.contin_feats.%s.txt'%(data_format+"_format"),sep=item_sep, time=cur_time)
-    del contin_df
-
-def process_with_paths(paths, data_format="default",is_test=False):
-    for path in paths:
-        process(path,data_format,is_test)
 
 if __name__ == "__main__":
     if False:

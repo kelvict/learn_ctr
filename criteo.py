@@ -3,6 +3,7 @@
 # Author: Zhiheng Zhang (405630376@qq.com)
 #
 import argparse
+
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
 
@@ -36,9 +37,14 @@ if __name__ == "__main__":
 		else:
 			criteo_train.train_model_with_conf(args.conf_path)
 	else:
-		print "Start testing"
-		from preprocesser import criteo_preprocesser
-		input_path = "dataset/ctr/criteo/dac_sample/dac_sample.csv"
-		criteo_preprocesser.preprocess(
-			input_path, False, 2, 1000, 1000, 1000)
-		print "Finish Preprocessing"
+		mode = 1
+		if mode == 0:
+			print "Start testing"
+			from preprocesser import criteo_preprocesser
+			input_path = "dataset/ctr/criteo/dac_sample/dac_sample.csv"
+			criteo_preprocesser.preprocess(
+				input_path, False, 2, 1000, 1000, 1000)
+			print "Finish Preprocessing"
+		elif mode == 1:
+			from train import criteo_train
+			criteo_train.train_model_with_conf("conf/test_LR.conf")

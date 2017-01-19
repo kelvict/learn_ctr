@@ -44,7 +44,9 @@ class LR(BaseModel):
             tf.initialize_all_variables().run(session=self.sess)
 
     def run(self, fetches, X=None, y=None):
-        feed_dict = {self.X: X}
+        feed_dict = {}
+        if X is not None:
+            feed_dict[self.X] = X
         if y is not None:
             feed_dict[self.y] = y
         return self.sess.run(fetches, feed_dict)

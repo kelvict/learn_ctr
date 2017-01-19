@@ -302,6 +302,10 @@ def preprocess(raw_trainset, is_test=False, n_split=2, discrete_min_freq=4000, n
     del contin_df
     gc.collect()
     log("End process contin df")
+    disc_field_sizes = joblib.load("%s.field_sizes.pkl"%(discrete_path_prefix))
+    contin_field_sizes = joblib.load("%s.field_sizes.pkl"%(contin_discrete_path_prefix))
+    all_field_size = disc_field_sizes + contin_field_sizes
+    joblib.dump(all_field_size, "%s.all_field_sizes.pkl"%path_prefix)
     log("Start to hstack discrete contin sparse one hot mat with differenct split")
     log("loading discrete")
     discrete_sparse_one_hot_mats = [joblib.load("%s.one_hot_discrete%d_in_%d.pkl"%(
@@ -309,11 +313,12 @@ def preprocess(raw_trainset, is_test=False, n_split=2, discrete_min_freq=4000, n
     log("loading contin")
     contin_discrete_sparse_one_hot_mats = [joblib.load("%s.one_hot_discrete%d_in_%d.pkl"%(
         contin_discrete_path_prefix, i, n_split)) for i in xrange(n_split)]
+
+    log("Hstacking")
+    whole_mat = sparse.hstack(discrete_sparse_one_hot_mats+contin_discrete_sparse_one_hot_mats)
     del discrete_sparse_one_hot_mats
     del contin_discrete_sparse_one_hot_mats
     gc.collect()
-    log("Hstacking")
-    whole_mat = sparse.hstack(discrete_sparse_one_hot_mats+contin_discrete_sparse_one_hot_mats)
     log("Dumping COO")
     joblib.dump(whole_mat, "%s.discrete_%d_contin_%d_%d.whole_one_hot_coo.pkl"
                 %(path_prefix, discrete_min_freq, n_contin_intervals, contin_min_freq))
@@ -327,13 +332,4 @@ def preprocess(raw_trainset, is_test=False, n_split=2, discrete_min_freq=4000, n
     log("End to hstack discrete contin sparse one hot mat with differenct split")
 
 if __name__ == "__main__":
-    if False:
-        test_get_feat_map()
-    if True:
-        path = "dac_sample/dac_sample.csv"
-        if True:
-            contin_feat_means_path = path+".contin_means"
-            update_default_contin_feat_means_path(path,contin_feat_means_path)
-            process(path,"libsvm", is_test=False, n_process=1, contin_feat_means_path=contin_feat_means_path)
-        else:
-            process(path,data_format="libsvm",is_test=True)
+    pass

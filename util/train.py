@@ -12,6 +12,7 @@ from scipy.sparse import coo_matrix
 from sklearn.metrics import roc_auc_score
 from sklearn.externals import joblib
 from sklearn.utils import shuffle as sklearn_shuffle
+
 import pandas as pd
 import util
 
@@ -135,7 +136,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
           batch_size=256, train_set_percent = 0.75,
           should_split_by_field=False, field_sizes=None,
           should_early_stop=True, early_stop_interval=10, should_dump_model=False,
-          model_dump_path="", **kwargs):
+          model_dump_path="", shuffle_trainset=True,**kwargs):
     util.log.log("Start to train model")
     util.log.log("Loading trainset and labels")
     dataset = joblib.load(trainset_csr_pkl_path)
@@ -147,8 +148,6 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
     test_labels = labels[train_set_size:]
 
     train_data = (train_set, train_labels)
-    util.log.log("Shuffling train_data")
-    train_data = sklearn_shuffle(train_data)
     test_data = (test_set, test_labels)
 
     if field_sizes is not None:
@@ -167,8 +166,13 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
         if batch_size > 0:
             losses = []
             n_iter = train_data[0].shape[0] / batch_size
-            for j in range(n_iter):
-                X, y = util.train.slice(train_data, j * batch_size, batch_size)
+            if shuffle_trainset:
+                shuffle_idxs = sklearn_shuffle(range(n_iter))
+            for j in xrange(n_iter):
+                idx = j
+                if shuffle_trainset:
+                    idx = shuffle_idxs[j]
+                X, y = util.train.slice(train_data, idx * batch_size, batch_size)
                 _, loss = model.run(fetches, X, y)
                 losses.append(loss)
         elif batch_size == -1:
@@ -180,10 +184,10 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
 
         train_score = roc_auc_score(train_data[1], train_preds)
         test_score = roc_auc_score(test_data[1], test_preds)
-        util.log.log("[%d]\tloss:%f\ttrain-auc:%f\teval-auc:%f"%(i, np.means(losses), train_score, test_score))
+        util.log.log("[%d]\tloss:%f\ttrain-auc:%f\teval-auc:%f"%(i, np.mean(losses), train_score, test_score))
         history_infos.append({
             "losses":losses,
-            "avg-loss":np.means(losses),
+            "avg-loss":np.mean(losses),
             "train-auc":train_score,
             "test-auc":test_score
         })

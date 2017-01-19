@@ -46,9 +46,7 @@ def train_model_with_conf(conf_path):
 							 **conf)
 			if conf['should_dump_model']:
 				model.dump(conf["model_dump_path"])
-
 			break
-
 
 if __name__ == "__main__":
 	pass

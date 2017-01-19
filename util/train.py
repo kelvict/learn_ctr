@@ -166,23 +166,43 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
         if batch_size > 0:
             losses = []
             n_iter = train_data[0].shape[0] / batch_size
+            if n_iter != float(train_data[0].shape[0]) / batch_size:
+                n_iter = n_iter + 1
             if shuffle_trainset:
                 shuffle_idxs = sklearn_shuffle(range(n_iter))
             for j in xrange(n_iter):
                 idx = j
                 if shuffle_trainset:
                     idx = shuffle_idxs[j]
-                X, y = util.train.slice(train_data, idx * batch_size, batch_size)
+                X, y = util.train.slice(train_data, idx * batch_size,
+                                        min(batch_size, train_data[0].shape[0] - idx * batch_size))
                 _, loss = model.run(fetches, X, y)
                 losses.append(loss)
         elif batch_size == -1:
             X, y = util.train.slice(train_data)
             _, loss = model.run(fetches, X, y)
             losses = [loss]
-        train_preds = model.run(model.y_prob, csr_2_input(train_data[0]))
+
+        train_preds = []
+        train_labels = []
+
+        eval_batch_size = 1000000
+        n_iter = train_data[0].shape[0] / eval_batch_size
+        if float(n_iter) != float(train_data[0].shape[0]) / eval_batch_size:
+            n_iter = n_iter + 1
+        for j in xrange(n_iter):
+            X, y = util.train.slice(train_data, j * eval_batch_size,
+                                    min(eval_batch_size, train_data[0].shape[0] - j * eval_batch_size))
+            preds = model.run(model.y_prob, X)
+
+            train_preds.append(preds)
+            train_labels.append(y)
+
+        train_preds = np.vstack(train_preds)
+        train_labels = np.vstack(train_labels)
         test_preds = model.run(model.y_prob, csr_2_input(test_data[0]))
 
-        train_score = roc_auc_score(train_data[1], train_preds)
+        train_score = roc_auc_score(train_labels, train_preds)
         test_score = roc_auc_score(test_data[1], test_preds)
         util.log.log("[%d]\tloss:%f\ttrain-auc:%f\teval-auc:%f"%(i, np.mean(losses), train_score, test_score))
         history_infos.append({

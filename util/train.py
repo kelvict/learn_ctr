@@ -171,6 +171,8 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
             if shuffle_trainset:
                 shuffle_idxs = sklearn_shuffle(range(n_iter))
             for j in xrange(n_iter):
+                if j%10000 == 0:
+                    util.log.log("Train in epoch %d iter %d"%(i, j))
                 idx = j
                 if shuffle_trainset:
                     idx = shuffle_idxs[j]
@@ -183,6 +185,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
             _, loss = model.run(fetches, X, y)
             losses = [loss]
 
+        util.log.log("Evaludate in epoch %d"%i)
         train_preds = []
         train_labels = []
 

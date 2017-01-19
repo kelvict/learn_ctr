@@ -177,7 +177,8 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
                 if shuffle_trainset:
                     idx = shuffle_idxs[j]
                 X, y = util.train.slice(train_data, idx * batch_size,
-                                        min(batch_size, train_data[0].shape[0] - idx * batch_size))
+                                        min(batch_size,
+                                            train_data[0].shape[0] - idx * batch_size))
                 _, loss = model.run(fetches, X, y)
                 losses.append(loss)
         elif batch_size == -1:
@@ -189,11 +190,12 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
         train_preds = []
         train_labels = []
 
-        eval_batch_size = 1000000
+        eval_batch_size = 10000
         n_iter = train_data[0].shape[0] / eval_batch_size
         if float(n_iter) != float(train_data[0].shape[0]) / eval_batch_size:
             n_iter = n_iter + 1
         for j in xrange(n_iter):
+            util.log.log("Predict in epoch %d iter %d"%(i, j))
             X, y = util.train.slice(train_data, j * eval_batch_size,
                                     min(eval_batch_size, train_data[0].shape[0] - j * eval_batch_size))
             preds = model.run(model.y_prob, X)
@@ -201,10 +203,12 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
             train_preds.append(preds)
             train_labels.append(y)
 
+        util.log.log("Stack Prediction Result")
         train_preds = np.vstack(train_preds)
         train_labels = np.vstack(train_labels)
+        util.log.log("Predict Test Set")
         test_preds = model.run(model.y_prob, csr_2_input(test_data[0]))
-
+        util.log.log("Cal AUC")
         train_score = roc_auc_score(train_labels, train_preds)
         test_score = roc_auc_score(test_data[1], test_preds)
         util.log.log("[%d]\tloss:%f\ttrain-auc:%f\teval-auc:%f"%(i, np.mean(losses), train_score, test_score))

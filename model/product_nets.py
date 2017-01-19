@@ -41,7 +41,7 @@ class LR(BaseModel):
             config = tf.ConfigProto()
             config.gpu_options.allow_growth = True
             self.sess = tf.Session(config=config)
-            tf.initialize_all_variables().run(session=self.sess)
+            tf.global_variables_initializer().run(session=self.sess)
 
     def run(self, fetches, X=None, y=None):
         feed_dict = {}
@@ -103,7 +103,7 @@ class FM(BaseModel):
             config = tf.ConfigProto()
             config.gpu_options.allow_growth = True
             self.sess = tf.Session(config=config)
-            tf.initialize_all_variables().run(session=self.sess)
+            tf.global_variables_initializer().run(session=self.sess)
 
     def run(self, fetches, X=None, y=None):
         feed_dict = {self.X: X}
@@ -189,7 +189,7 @@ class FNN(BaseModel):
             config = tf.ConfigProto()
             config.gpu_options.allow_growth = True
             self.sess = tf.Session(config=config)
-            tf.initialize_all_variables().run(session=self.sess)
+            tf.global_variables_initializer().run(session=self.sess)
 
     def run(self, fetches, X=None, y=None):
         feed_dict = {}
@@ -284,7 +284,7 @@ class CCPM(BaseModel):
             config = tf.ConfigProto()
             config.gpu_options.allow_growth = True
             self.sess = tf.Session(config=config)
-            tf.initialize_all_variables().run(session=self.sess)
+            tf.global_variables_initializer().run(session=self.sess)
 
     def run(self, fetches, X=None, y=None):
         feed_dict = {}
@@ -396,7 +396,7 @@ class PNN1(BaseModel):
             config = tf.ConfigProto()
             config.gpu_options.allow_growth = True
             self.sess = tf.Session(config=config)
-            tf.initialize_all_variables().run(session=self.sess)
+            tf.global_variables_initializer().run(session=self.sess)
 
     def run(self, fetches, X=None, y=None):
         feed_dict = {}
@@ -501,7 +501,7 @@ class PNN2(BaseModel):
             config = tf.ConfigProto()
             config.gpu_options.allow_growth = True
             self.sess = tf.Session(config=config)
-            tf.initialize_all_variables().run(session=self.sess)
+            tf.global_variables_initializer().run(session=self.sess)
 
     def run(self, fetches, X=None, y=None):
         feed_dict = {}

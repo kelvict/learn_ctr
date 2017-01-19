@@ -21,6 +21,7 @@ if __name__ == "__main__":
 	parser.add_argument("--train", action="store_true", help="should train data with model")
 	parser.add_argument("--create_conf", type=str, help="create default config", default="")
 	parser.add_argument("--conf_path", type=str, help="config path", default="")
+	parser.add_argument("--gpu", type=str, help="Set CUDA_VISIBLE_DEVICES")
 	args = parser.parse_args()
 
 	if args.preprocess:
@@ -31,6 +32,9 @@ if __name__ == "__main__":
 			input_path, args.test, args.split_num, args.discrete_min_freq, args.continue_n_interval, args.continue_min_freq)
 		print "Finish Preprocessing"
 	elif args.train:
+		import os
+		os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+
 		from train import criteo_train
 		if len(args.create_conf) != 0:
 			criteo_train.create_default_conf(args.conf_path, args.create_conf)

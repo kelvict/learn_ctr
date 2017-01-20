@@ -87,10 +87,10 @@ def get_field_sizes_from_one_hot_encoders(one_hot_encoders):
 
 def get_field_idxs_from_field_size(field_sizes):
 	total_size = 0
-	field_idxs = [total_size]
+	field_idxs = []
 	for i in xrange(len(field_sizes)):
-		total_size = total_size + field_sizes[i]
 		field_idxs.append(total_size)
+		total_size = total_size + field_sizes[i]
 	return field_idxs
 
 if __name__ == "__main__":

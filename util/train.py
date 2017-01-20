@@ -134,7 +134,7 @@ def split_data_by_field(data, field_offsets):
 
 def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
           batch_size=256, train_set_percent = 0.75,
-          should_split_by_field=False, field_sizes=None,
+          should_split_by_field=False, field_sizes_pkl_path=None,
           should_early_stop=True, early_stop_interval=10, should_dump_model=False,
           model_dump_path="", shuffle_trainset=True, eval_interval=2,**kwargs):
     util.log.log("Start to train model")
@@ -150,12 +150,14 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
     train_data = (train_set, train_labels)
     test_data = (test_set, test_labels)
 
+    field_sizes = joblib.load(field_sizes_pkl_path) \
+        if field_sizes_pkl_path is not None else None
     if field_sizes is not None:
-        feat_idxs = util.preprocess.get_field_idxs_from_field_size(field_sizes)
         if should_split_by_field:
+            field_idxs = util.preprocess.get_field_idxs_from_field_size(field_sizes)
             util.log.log("Spliting Data by field")
-            train_data = util.train.split_data_by_field(train_data, feat_idxs)
-            test_data = util.train.split_data_by_field(test_data,feat_idxs)
+            train_data = util.train.split_data_by_field(train_data, field_idxs)
+            test_data = util.train.split_data_by_field(test_data,field_idxs)
 
     history_infos = []
     history_test_auc = []
@@ -165,8 +167,10 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
         losses = []
         if batch_size > 0:
             losses = []
-            n_iter = train_data[0].shape[0] / batch_size
-            if n_iter != float(train_data[0].shape[0]) / batch_size:
+            inst_size = train_data[0].shape[0] \
+                if not isinstance(train_data[0], list) else train_data[0][0].shape[0]
+            n_iter = inst_size / batch_size
+            if n_iter != float(inst_size) / batch_size:
                 n_iter = n_iter + 1
             if shuffle_trainset:
                 shuffle_idxs = sklearn_shuffle(range(n_iter))
@@ -178,7 +182,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
                     idx = shuffle_idxs[j]
                 X, y = util.train.slice(train_data, idx * batch_size,
                                         min(batch_size,
-                                            train_data[0].shape[0] - idx * batch_size))
+                                            inst_size - idx * batch_size))
                 _, loss = model.run(fetches, X, y)
                 losses.append(loss)
         elif batch_size == -1:
@@ -213,14 +217,15 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
 
 def predict(model, eval_data, batch_size=100000):
     preds = []
-
-    n_iter = eval_data[0].shape[0] / batch_size
-    if float(n_iter) != float(eval_data[0].shape[0]) / batch_size:
+    inst_size = eval_data[0].shape[0] \
+        if not isinstance(eval_data[0], list) else eval_data[0][0].shape[0]
+    n_iter = inst_size / batch_size
+    if float(n_iter) != float(inst_size) / batch_size:
         n_iter = n_iter + 1
     for j in xrange(n_iter):
         util.log.log("Predict in iter %d"%(j))
         X, y = util.train.slice(eval_data, j * batch_size,
-                                min(batch_size, eval_data[0].shape[0] - j * batch_size))
+                                min(batch_size, inst_size - j * batch_size))
         preds.append(model.run(model.y_prob, X))
 
     util.log.log("Stack Prediction Result")

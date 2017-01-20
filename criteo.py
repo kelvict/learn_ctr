@@ -42,7 +42,7 @@ if __name__ == "__main__":
 		else:
 			criteo_train.train_model_with_conf(args.conf_path)
 	else:
-		mode = 2
+		mode = 1
 		if mode == 0:
 			print "Start testing"
 			from preprocesser import criteo_preprocesser
@@ -52,9 +52,9 @@ if __name__ == "__main__":
 			print "Finish Preprocessing"
 		elif mode == 1:
 			from train import criteo_train
-			criteo_train.train_model_with_conf("conf/test_LR.conf")
+			criteo_train.train_model_with_conf("conf/test_FNN.conf")
 		elif mode == 2:
 			from train import criteo_train
-			model_names = ["FNN", "CCPM", "PNN1", "PNN2"]
+			model_names = ["FM"]
 			for name in model_names:
 				criteo_train.create_default_conf("conf/%s.conf"%(name), name)

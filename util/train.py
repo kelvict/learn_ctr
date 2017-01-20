@@ -136,7 +136,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
           batch_size=256, train_set_percent = 0.75,
           should_split_by_field=False, field_sizes=None,
           should_early_stop=True, early_stop_interval=10, should_dump_model=False,
-          model_dump_path="", shuffle_trainset=True,**kwargs):
+          model_dump_path="", shuffle_trainset=True, eval_interval=2,**kwargs):
     util.log.log("Start to train model")
     util.log.log("Loading trainset and labels")
     dataset = joblib.load(trainset_csr_pkl_path)
@@ -185,33 +185,18 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
             X, y = util.train.slice(train_data)
             _, loss = model.run(fetches, X, y)
             losses = [loss]
-
-        util.log.log("Evaludate in epoch %d"%i)
-        train_preds = []
-        train_labels = []
-
-        eval_batch_size = 10000
-        n_iter = train_data[0].shape[0] / eval_batch_size
-        if float(n_iter) != float(train_data[0].shape[0]) / eval_batch_size:
-            n_iter = n_iter + 1
-        for j in xrange(n_iter):
-            util.log.log("Predict in epoch %d iter %d"%(i, j))
-            X, y = util.train.slice(train_data, j * eval_batch_size,
-                                    min(eval_batch_size, train_data[0].shape[0] - j * eval_batch_size))
-            preds = model.run(model.y_prob, X)
-
-            train_preds.append(preds)
-            train_labels.append(y)
-
-        util.log.log("Stack Prediction Result")
-        train_preds = np.vstack(train_preds)
-        train_labels = np.vstack(train_labels)
-        util.log.log("Predict Test Set")
-        test_preds = model.run(model.y_prob, csr_2_input(test_data[0]))
-        util.log.log("Cal AUC")
-        train_score = roc_auc_score(train_labels, train_preds)
-        test_score = roc_auc_score(test_data[1], test_preds)
-        util.log.log("[%d]\tloss:%f\ttrain-auc:%f\teval-auc:%f"%(i, np.mean(losses), train_score, test_score))
+        if ( i + 1 ) % eval_interval == 0:
+            util.log.log("Evaludate in epoch %d"%i)
+            train_preds = predict(model, train_data, 100000)
+            util.log.log("Predict Test Set")
+            test_preds = predict(model, test_data, 100000)
+            util.log.log("Cal AUC")
+            train_score = roc_auc_score(train_data[1], train_preds)
+            test_score = roc_auc_score(test_data[1], test_preds)
+            util.log.log("[%d]\tloss:%f\ttrain-auc:%f\teval-auc:%f"%(i, np.mean(losses), train_score, test_score))
+        else:
+            train_score = -1
+            test_score = -1
         history_infos.append({
             "losses":losses,
             "avg-loss":np.mean(losses),
@@ -226,7 +211,22 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
     if should_dump_model:
         model.dump(model_dump_path)
 
+def predict(model, eval_data, batch_size=100000):
+    preds = []
 
+    n_iter = eval_data[0].shape[0] / batch_size
+    if float(n_iter) != float(eval_data[0].shape[0]) / batch_size:
+        n_iter = n_iter + 1
+    for j in xrange(n_iter):
+        util.log.log("Predict in iter %d"%(j))
+        X, y = util.train.slice(eval_data, j * batch_size,
+                                min(batch_size, eval_data[0].shape[0] - j * batch_size))
+        preds = model.run(model.y_prob, X)
+        preds.append(preds)
+
+    util.log.log("Stack Prediction Result")
+    preds = np.vstack(preds)
+    return preds
 def init_var_map(init_vars, init_path=None):
     if init_path is not None:
         load_var_map = pkl.load(open(init_path, 'rb'))

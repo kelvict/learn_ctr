@@ -221,12 +221,12 @@ def predict(model, eval_data, batch_size=100000):
         util.log.log("Predict in iter %d"%(j))
         X, y = util.train.slice(eval_data, j * batch_size,
                                 min(batch_size, eval_data[0].shape[0] - j * batch_size))
-        preds = model.run(model.y_prob, X)
-        preds.append(preds)
+        preds.append(model.run(model.y_prob, X))
 
     util.log.log("Stack Prediction Result")
     preds = np.vstack(preds)
     return preds
+
 def init_var_map(init_vars, init_path=None):
     if init_path is not None:
         load_var_map = pkl.load(open(init_path, 'rb'))

@@ -18,7 +18,7 @@ if __name__ == "__main__":
 	parser.add_argument("--continue_n_interval", type=int,default=1000)
 
 	#Split By Col
-	parser.add_argument("--split_field", action="store_ture", help="should split by col")
+	parser.add_argument("--split_field", action="store_true", help="should split by col")
 	parser.add_argument("--field_sizes_path", action=str, help="set field sizes path")
 
 	#Train Argument

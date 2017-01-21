@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
 	#Split By Col
 	parser.add_argument("--split_field", action="store_true", help="should split by col")
-	parser.add_argument("--field_sizes_path", action=str, help="set field sizes path")
+	parser.add_argument("--field_sizes_path", type=str, help="set field sizes path")
 
 	#Train Argument
 	parser.add_argument("--train", action="store_true", help="should train data with model")

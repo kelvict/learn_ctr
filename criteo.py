@@ -17,6 +17,10 @@ if __name__ == "__main__":
 	parser.add_argument("--continue_min_freq", type=int,default=20)
 	parser.add_argument("--continue_n_interval", type=int,default=1000)
 
+	#Split By Col
+	parser.add_argument("--split_field", action="store_ture", help="should split by col")
+	parser.add_argument("--field_sizes_path", action=str, help="set field sizes path")
+
 	#Train Argument
 	parser.add_argument("--train", action="store_true", help="should train data with model")
 	parser.add_argument("--create_conf", type=str, help="create default config", default="")
@@ -41,6 +45,10 @@ if __name__ == "__main__":
 			criteo_train.create_default_conf(args.conf_path, args.create_conf)
 		else:
 			criteo_train.train_model_with_conf(args.conf_path)
+	elif args.split_field:
+		from util import preprocess
+		preprocess.split_sparse_data_by_field(
+			args.input, args.field_sizes_path, args.output)
 	else:
 		mode = 1
 		if mode == 0:
@@ -58,3 +66,5 @@ if __name__ == "__main__":
 			model_names = ["FM"]
 			for name in model_names:
 				criteo_train.create_default_conf("conf/%s.conf"%(name), name)
+		elif mode == 3:
+			pass

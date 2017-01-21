@@ -7,7 +7,9 @@ import pandas as pd
 import numpy as np
 import os
 import sys
-from util import log
+from util import log, train as train_util
+import util
+from sklearn.externals import joblib
 def _apply_df(params):
 	df = pd.DataFrame()
 
@@ -92,6 +94,29 @@ def get_field_idxs_from_field_size(field_sizes):
 		field_idxs.append(total_size)
 		total_size = total_size + field_sizes[i]
 	return field_idxs
+
+
+def split_sparse_data_by_field(data_pkl_path, field_sizes_path, dump_path):
+	data = joblib.load(data_pkl_path)
+	field_sizes = joblib.load(field_sizes_path)
+	field_offsets = get_field_idxs_from_field_size(field_sizes)
+
+	data = data.tocsc()
+
+	fields = []
+	for i in range(len(field_offsets) - 1):
+		start_ind = field_offsets[i]
+		end_ind = field_offsets[i + 1]
+		field_i = data[0][:, start_ind:end_ind]
+		fields.append(field_i)
+	fields.append(data[0][:, field_offsets[-1]:])
+	del data
+	import gc
+	gc.collect()
+	for i in xrange(len(fields)):
+		fields[i] = fields[i].tocsr()
+	joblib.dump(fields, dump_path)
+	return fields
 
 if __name__ == "__main__":
 	df = pd.DataFrame([range(10,20,1), range(20,30,1)])

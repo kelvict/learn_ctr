@@ -97,25 +97,32 @@ def get_field_idxs_from_field_size(field_sizes):
 
 
 def split_sparse_data_by_field(data_pkl_path, field_sizes_path, dump_path):
+	log.log("Loading data and field sizes")
 	data = joblib.load(data_pkl_path)
 	field_sizes = joblib.load(field_sizes_path)
 	field_offsets = get_field_idxs_from_field_size(field_sizes)
-
+	log.log("Start to csc")
 	data = data.tocsc()
-
+	log.log("Start to split")
 	fields = []
 	for i in range(len(field_offsets) - 1):
+		log.log("Split col %d"%i)
 		start_ind = field_offsets[i]
 		end_ind = field_offsets[i + 1]
 		field_i = data[0][:, start_ind:end_ind]
 		fields.append(field_i)
 	fields.append(data[0][:, field_offsets[-1]:])
+	log.log("Clear old data")
 	del data
 	import gc
 	gc.collect()
+	log.log("To CSR")
 	for i in xrange(len(fields)):
+		log.log("Col %d To CSR"%i)
 		fields[i] = fields[i].tocsr()
+	log.log("Start to dump fields")
 	joblib.dump(fields, dump_path)
+	log.log("Finish whole split")
 	return fields
 
 if __name__ == "__main__":

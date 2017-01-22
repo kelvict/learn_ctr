@@ -46,7 +46,8 @@ if __name__ == "__main__":
 		else:
 			criteo_train.train_model_with_conf(args.conf_path)
 	elif args.split_field:
-		from util import preprocess
+		from util import preprocess, log
+		log.config_log("./log/split_%s_"%(args.input))
 		preprocess.split_sparse_data_by_field(
 			args.input, args.field_sizes_path, args.output)
 	else:

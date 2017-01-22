@@ -16,7 +16,7 @@ if __name__ == "__main__":
 	parser.add_argument("--discrete_min_freq", type=int,default=1000)
 	parser.add_argument("--continue_min_freq", type=int,default=20)
 	parser.add_argument("--continue_n_interval", type=int,default=1000)
-
+	parser.add_argument("--split_by_field", action="store_true", help="if split by field")
 	#Split By Col
 	parser.add_argument("--split_field", action="store_true", help="should split by col")
 	parser.add_argument("--field_sizes_path", type=str, help="set field sizes path")
@@ -33,7 +33,8 @@ if __name__ == "__main__":
 		from preprocesser import criteo_preprocesser
 		input_path = args.input
 		criteo_preprocesser.preprocess(
-			input_path, args.test, args.split_num, args.discrete_min_freq, args.continue_n_interval, args.continue_min_freq)
+			input_path, args.test, args.split_num, args.discrete_min_freq, args.continue_n_interval, args.continue_min_freq,
+			split_by_field=args.split_by_field)
 		print "Finish Preprocessing"
 	elif args.train:
 		import os

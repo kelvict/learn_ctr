@@ -267,7 +267,7 @@ def process_discrete_df(discrete_df, path_prefix="discrete", n_split=2, min_freq
     log("End to process discrete df")
 
 
-def preprocess(raw_trainset, is_test=False, n_split=2, discrete_min_freq=4000, n_contin_intervals=1000, contin_min_freq=10):
+def preprocess(raw_trainset, is_test=False, n_split=2, discrete_min_freq=4000, n_contin_intervals=1000, contin_min_freq=10, split_by_col=False):
     log("Start to load and split dataset: " + raw_trainset)
     labels, contin_df, discrete_df = get_labels_contin_discrete_feats(raw_trainset)
     log("line "+str(labels.shape[0]))
@@ -281,16 +281,19 @@ def preprocess(raw_trainset, is_test=False, n_split=2, discrete_min_freq=4000, n
     cur_time = time.strftime("%Y%m%d_%H%M%S")
     path_prefix = "%s.%s"%(raw_trainset, cur_time)
 
-    dump_col(labels,path_prefix+'.labels.txt')
+    n_discrete_split = n_split if not split_by_col else discrete_df.shape[1]
+    n_contin_split = n_split if not split_by_col else contin_df.shape[1]
 
+    dump_col(labels,path_prefix+'.labels.txt')
     del labels
     log("To Cache Contin df")
     joblib.dump(contin_df, "%s.contin_df.pkl"%path_prefix)
     log("Contin df Cached")
     del contin_df
+
     log("Start to process discrete df")
     discrete_path_prefix = "%s.discrete_%d"%(path_prefix,discrete_min_freq)
-    process_discrete_df(discrete_df, path_prefix=discrete_path_prefix, n_split=n_split, min_freq=discrete_min_freq)
+    process_discrete_df(discrete_df, path_prefix=discrete_path_prefix, n_split=n_discrete_split, min_freq=discrete_min_freq)
     del discrete_df
     gc.collect()
     log("End process discrete df")
@@ -298,7 +301,7 @@ def preprocess(raw_trainset, is_test=False, n_split=2, discrete_min_freq=4000, n
     contin_df = joblib.load("%s.contin_df.pkl"%path_prefix)
     log("Start to process contin df")
     contin_discrete_path_prefix = "%s.contin_%d_%d"%(path_prefix, n_contin_intervals, contin_min_freq)
-    process_contin_df(contin_df, path_prefix=contin_discrete_path_prefix, n_interval=n_contin_intervals, n_split=n_split, min_freq=contin_min_freq)
+    process_contin_df(contin_df, path_prefix=contin_discrete_path_prefix, n_interval=n_contin_intervals, n_split=n_contin_split, min_freq=contin_min_freq)
     del contin_df
     gc.collect()
     log("End process contin df")
@@ -309,17 +312,22 @@ def preprocess(raw_trainset, is_test=False, n_split=2, discrete_min_freq=4000, n
     log("Start to hstack discrete contin sparse one hot mat with differenct split")
     log("loading discrete")
     discrete_sparse_one_hot_mats = [joblib.load("%s.one_hot_discrete%d_in_%d.pkl"%(
-        discrete_path_prefix, i, n_split)) for i in xrange(n_split)]
+        discrete_path_prefix, i, n_discrete_split)) for i in xrange(n_discrete_split)]
     log("loading contin")
     contin_discrete_sparse_one_hot_mats = [joblib.load("%s.one_hot_discrete%d_in_%d.pkl"%(
-        contin_discrete_path_prefix, i, n_split)) for i in xrange(n_split)]
+        contin_discrete_path_prefix, i, n_contin_split)) for i in xrange(n_contin_split)]
 
-    log("Hstacking")
-    whole_mat = sparse.hstack(discrete_sparse_one_hot_mats+contin_discrete_sparse_one_hot_mats)
+    log("Hstacking discrete mat %d contin discrete mat %d"
+        %(len(discrete_sparse_one_hot_mats), len(contin_discrete_sparse_one_hot_mats)))
+    all_split_by_col_mats = discrete_sparse_one_hot_mats+contin_discrete_sparse_one_hot_mats
+    joblib.dump("%s.discrete_%d_contin_%d_%d.all_split_by_col_mats.pkl"
+                %(path_prefix, discrete_min_freq, n_contin_intervals, contin_min_freq))
+    whole_mat = sparse.hstack(all_split_by_col_mats)
+    del all_split_by_col_mats
     del discrete_sparse_one_hot_mats
     del contin_discrete_sparse_one_hot_mats
     gc.collect()
-    log("Dumping COO")
+    log("Dumping COO: %s"%str(whole_mat.shape))
     joblib.dump(whole_mat, "%s.discrete_%d_contin_%d_%d.whole_one_hot_coo.pkl"
                 %(path_prefix, discrete_min_freq, n_contin_intervals, contin_min_freq))
     log("To CSR")

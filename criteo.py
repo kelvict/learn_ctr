@@ -51,13 +51,13 @@ if __name__ == "__main__":
 		preprocess.split_sparse_data_by_field(
 			args.input, args.field_sizes_path, args.output)
 	else:
-		mode = 1
+		mode = 0
 		if mode == 0:
 			print "Start testing"
 			from preprocesser import criteo_preprocesser
 			input_path = "dataset/ctr/criteo/dac_sample/dac_sample.csv"
 			criteo_preprocesser.preprocess(
-				input_path, False, 2, 1000, 1000, 1000)
+				input_path, False, 2, 1000, 1000, 1000,split_by_col=True)
 			print "Finish Preprocessing"
 		elif mode == 1:
 			from train import criteo_train

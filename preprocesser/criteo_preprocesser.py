@@ -319,13 +319,25 @@ def preprocess(raw_trainset, is_test=False, n_split=2, discrete_min_freq=4000, n
 
     log("Hstacking discrete mat %d contin discrete mat %d"
         %(len(discrete_sparse_one_hot_mats), len(contin_discrete_sparse_one_hot_mats)))
+
     all_split_by_col_mats = discrete_sparse_one_hot_mats+contin_discrete_sparse_one_hot_mats
-    joblib.dump("%s.discrete_%d_contin_%d_%d.all_split_by_col_mats.pkl"
+    del discrete_sparse_one_hot_mats
+    del contin_discrete_sparse_one_hot_mats
+    gc.collect()
+    log("all_split_by_col_mats_len: %s"%(str(len(all_split_by_col_mats))))
+    joblib.dump(all_split_by_col_mats, "%s.discrete_%d_contin_%d_%d.all_split_by_col_coo_mats.pkl"
+                %(path_prefix, discrete_min_freq, n_contin_intervals, contin_min_freq))
+    log("COO Mats to CSR Mats")
+    all_split_by_col_mats = [mat.tocsr() for mat in all_split_by_col_mats]
+    joblib.dump(all_split_by_col_mats, "%s.discrete_%d_contin_%d_%d.all_split_by_col_csr_mats.pkl"
+                %(path_prefix, discrete_min_freq, n_contin_intervals, contin_min_freq))
+    del all_split_by_col_mats
+    gc.collect()
+    log("Loading all COO Mats")
+    all_split_by_col_mats = joblib.load("%s.discrete_%d_contin_%d_%d.all_split_by_col_coo_mats.pkl"
                 %(path_prefix, discrete_min_freq, n_contin_intervals, contin_min_freq))
     whole_mat = sparse.hstack(all_split_by_col_mats)
     del all_split_by_col_mats
-    del discrete_sparse_one_hot_mats
-    del contin_discrete_sparse_one_hot_mats
     gc.collect()
     log("Dumping COO: %s"%str(whole_mat.shape))
     joblib.dump(whole_mat, "%s.discrete_%d_contin_%d_%d.whole_one_hot_coo.pkl"

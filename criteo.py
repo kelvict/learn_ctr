@@ -52,7 +52,7 @@ if __name__ == "__main__":
 		preprocess.split_sparse_data_by_field(
 			args.input, args.field_sizes_path, args.output)
 	else:
-		mode = 0
+		mode = 1
 		if mode == 0:
 			print "Start testing"
 			from preprocesser import criteo_preprocesser

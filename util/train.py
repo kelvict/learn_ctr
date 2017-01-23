@@ -141,10 +141,16 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
     util.log.log("Loading trainset and labels")
     dataset = joblib.load(trainset_csr_pkl_path)
     labels = pd.read_csv(labels_pkl_path, header=None)
-    train_set_size = int(train_set_percent * dataset.shape[0])
-    train_set = dataset[:train_set_size]
+    train_set_size = int(train_set_percent * labels.shape[0])
+    if not isinstance(dataset, list):
+        train_set = dataset[:train_set_size]
+        test_set = dataset[train_set_size:]
+    else:
+        train_set = [field[:train_set_size] for field in dataset]
+        test_set = [field[train_set_size:] for field in dataset]
+
     train_labels = labels[:train_set_size]
-    test_set = dataset[train_set_size:]
+
     test_labels = labels[train_set_size:]
 
     train_data = (train_set, train_labels)
@@ -153,7 +159,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
     field_sizes = joblib.load(field_sizes_pkl_path) \
         if field_sizes_pkl_path is not None else None
     if field_sizes is not None:
-        if should_split_by_field:
+        if should_split_by_field and not isinstance(train_data[0], list):
             field_idxs = util.preprocess.get_field_idxs_from_field_size(field_sizes)
             util.log.log("Spliting Data by field")
             train_data = util.train.split_data_by_field(train_data, field_idxs)

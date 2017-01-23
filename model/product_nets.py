@@ -193,8 +193,9 @@ class FNN(BaseModel):
 
     def run(self, fetches, X=None, y=None):
         feed_dict = {}
-        for i in range(len(X)):
-            feed_dict[self.X[i]] = X[i]
+        if X is not None:
+            for i in range(len(X)):
+                feed_dict[self.X[i]] = X[i]
         if y is not None:
             feed_dict[self.y] = y
         return self.sess.run(fetches, feed_dict)
@@ -288,8 +289,9 @@ class CCPM(BaseModel):
 
     def run(self, fetches, X=None, y=None):
         feed_dict = {}
-        for i in range(len(X)):
-            feed_dict[self.X[i]] = X[i]
+        if X is not None:
+            for i in range(len(X)):
+                feed_dict[self.X[i]] = X[i]
         if y is not None:
             feed_dict[self.y] = y
         return self.sess.run(fetches, feed_dict)
@@ -400,8 +402,9 @@ class PNN1(BaseModel):
 
     def run(self, fetches, X=None, y=None):
         feed_dict = {}
-        for i in range(len(X)):
-            feed_dict[self.X[i]] = X[i]
+        if X is not None:
+            for i in range(len(X)):
+                feed_dict[self.X[i]] = X[i]
         if y is not None:
             feed_dict[self.y] = y
         return self.sess.run(fetches, feed_dict)
@@ -505,8 +508,9 @@ class PNN2(BaseModel):
 
     def run(self, fetches, X=None, y=None):
         feed_dict = {}
-        for i in range(len(X)):
-            feed_dict[self.X[i]] = X[i]
+        if X is not None:
+            for i in range(len(X)):
+                feed_dict[self.X[i]] = X[i]
         if y is not None:
             feed_dict[self.y] = y
         return self.sess.run(fetches, feed_dict)

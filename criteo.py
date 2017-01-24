@@ -17,6 +17,13 @@ if __name__ == "__main__":
 	parser.add_argument("--continue_min_freq", type=int,default=20)
 	parser.add_argument("--continue_n_interval", type=int,default=1000)
 	parser.add_argument("--split_by_field", action="store_true", help="if split by field")
+	#Split trainset and testset
+	parser.add_argument("--split_train_test", action="store_true")
+	parser.add_argument("--dataset_path", type=str,)
+	parser.add_argument("--labels_path", type=str, help="set labels path")
+	parser.add_argument("--trainset_rate", type=float)
+	parser.add_argument("--traindata_dump_path", type=str)
+	parser.add_argument("--testdata_dump_path", type=str)
 	#Split By Col
 	parser.add_argument("--split_field", action="store_true", help="should split by col")
 	parser.add_argument("--field_sizes_path", type=str, help="set field sizes path")
@@ -51,6 +58,9 @@ if __name__ == "__main__":
 		log.config_log("./log/split_%s_"%(args.input.replace('/', '_')))
 		preprocess.split_sparse_data_by_field(
 			args.input, args.field_sizes_path, args.output)
+	elif args.split_train_test:
+		from util import preprocess
+		log.config_log("./log/split_trainset_testset_"%(args.input.replace('/', '_')))
 	else:
 		mode = 1
 		if mode == 0:

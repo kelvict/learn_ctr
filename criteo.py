@@ -59,10 +59,14 @@ if __name__ == "__main__":
 		preprocess.split_sparse_data_by_field(
 			args.input, args.field_sizes_path, args.output)
 	elif args.split_train_test:
-		from util import preprocess
-		log.config_log("./log/split_trainset_testset_"%(args.input.replace('/', '_')))
+		from util import preprocess, log
+		log.config_log("./log/split_trainset_testset_%s.log"%(args.dataset_path.replace('/', '_')))
+		preprocess.split_train_test_data(
+			args.dataset_path, args.labels_path,
+			args.trainset_rate, args.traindata_dump_path,
+			args.testdata_dump_path)
 	else:
-		mode = 1
+		mode = 3
 		if mode == 0:
 			print "Start testing"
 			from preprocesser import criteo_preprocesser
@@ -79,4 +83,13 @@ if __name__ == "__main__":
 			for name in model_names:
 				criteo_train.create_default_conf("conf/%s.conf"%(name), name)
 		elif mode == 3:
-			pass
+			from util import preprocess, log
+			dataset_path = "dataset/ctr/criteo/dac_sample/dac_sample.csv.20170122_155305.discrete_1000_contin_1000_1000.all_split_by_col_csr_mats.pkl"
+			log.config_log("./log/split_trainset_testset_%s.log"%(dataset_path.replace('/', '_')))
+			preprocess.split_train_test_data(
+				"dataset/ctr/criteo/dac_sample/dac_sample.csv.20170122_155305.discrete_1000_contin_1000_1000.all_split_by_col_csr_mats.pkl",
+				"dataset/ctr/criteo/dac_sample/dac_sample.csv.20170122_155305.labels.txt",
+				0.75,
+				"dataset/ctr/criteo/dac_sample/dac_sample.csv.20170122_155305.discrete_1000_contin_1000_1000.all_split_by_col_csr_mats_train.pkl",
+				"dataset/ctr/criteo/dac_sample/dac_sample.csv.20170122_155305.discrete_1000_contin_1000_1000.all_split_by_col_csr_mats_test.pkl")
+

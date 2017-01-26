@@ -36,6 +36,7 @@ def create_conf(path, model_name="lr", model_params=None, **kwargs):
         "should_dump_model":True,
         "model_dump_path":"dataset/ctr/criteo/..model.pkl",
         "trainset_csr_pkl_path":"dataset/ctr/criteo/....pkl",
+        "testset_csr_pkl_path":"dataset/ctr/criteo/....pkl",
         "labels_pkl_path":"labels.pkl",
         "field_sizes_pkl_path":"field_size.pkl",
         "n_epoch":10,
@@ -132,30 +133,34 @@ def split_data_by_field(data, field_offsets):
     fields.append(data[0][:, field_offsets[-1]:])
     return fields, data[1]
 
-def train(model, trainset_csr_pkl_path, labels_pkl_path, n_epoch=5,
+def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_path=None, n_epoch=5,
           batch_size=256, train_set_percent = 0.75,
           should_split_by_field=False, field_sizes_pkl_path=None,
           should_early_stop=True, early_stop_interval=10, should_dump_model=False,
           model_dump_path="", shuffle_trainset=True, eval_interval=2,**kwargs):
     util.log.log("Start to train model")
     util.log.log("Loading trainset and labels")
-    dataset = joblib.load(trainset_csr_pkl_path)
-    labels = pd.read_csv(labels_pkl_path, header=None)
-    train_set_size = int(train_set_percent * labels.shape[0])
-    util.log.log("Start to split trainset and testset")
-    if not isinstance(dataset, list):
-        train_set = dataset[:train_set_size]
-        test_set = dataset[train_set_size:]
+    if testset_csr_pkl_path is None:
+        dataset = joblib.load(trainset_csr_pkl_path)
+        labels = pd.read_csv(labels_pkl_path, header=None)
+        train_set_size = int(train_set_percent * labels.shape[0])
+        util.log.log("Start to split trainset and testset")
+        if not isinstance(dataset, list):
+            train_set = dataset[:train_set_size]
+            test_set = dataset[train_set_size:]
+        else:
+            train_set = [field[:train_set_size] for field in dataset]
+            test_set = [field[train_set_size:] for field in dataset]
+        util.log.log("Start to split trainset and testset labels")
+        train_labels = labels[:train_set_size]
+
+        test_labels = labels[train_set_size:]
+
+        train_data = (train_set, train_labels)
+        test_data = (test_set, test_labels)
     else:
-        train_set = [field[:train_set_size] for field in dataset]
-        test_set = [field[train_set_size:] for field in dataset]
-    util.log.log("Start to split trainset and testset labels")
-    train_labels = labels[:train_set_size]
-
-    test_labels = labels[train_set_size:]
-
-    train_data = (train_set, train_labels)
-    test_data = (test_set, test_labels)
+        train_data = joblib.load(trainset_csr_pkl_path)
+        test_data = joblib.load(testset_csr_pkl_path)
     util.log.log("Handling field size")
     field_sizes = joblib.load(field_sizes_pkl_path) \
         if field_sizes_pkl_path is not None else None

@@ -20,6 +20,7 @@ def create_default_conf(dump_path, model_name=LR.__name__):
 			return util.train.create_conf(
 				dump_path, model_name, model_params=Model.default_params,
 				trainset_csr_pkl_path="dataset/ctr/criteo/trainset_csr.pkl",
+				testset_csr_pkl_path="dataset/ctr/criteo/testset_csr.pkl",
 				labels_pkl_path="dataset/ctr/criteo/labels.pkl",
 				field_sizes_pkl_path="dataset/ctr/criteo/field_sizes.pkl"
 			)

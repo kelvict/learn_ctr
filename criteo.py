@@ -54,6 +54,7 @@ if __name__ == "__main__":
 		else:
 			conf_paths = args.conf_path.split(";")
 			for conf_path in conf_paths:
+				print "Train with Conf path %s"%conf_path
 				criteo_train.train_model_with_conf(args.conf_path)
 	elif args.split_field:
 		from util import preprocess, log
@@ -68,7 +69,7 @@ if __name__ == "__main__":
 			args.trainset_rate, args.traindata_dump_path,
 			args.testdata_dump_path)
 	else:
-		mode = 3
+		mode = 1
 		if mode == 0:
 			print "Start testing"
 			from preprocesser import criteo_preprocesser
@@ -78,7 +79,10 @@ if __name__ == "__main__":
 			print "Finish Preprocessing"
 		elif mode == 1:
 			from train import criteo_train
-			criteo_train.train_model_with_conf("conf/test_FNN.conf")
+			str = "./conf/FNN.conf;./conf/LR.conf;./conf/PNN1.conf;./conf/FM.conf;./conf/CCPM.conf;./conf/PNN2.conf"
+			conf_paths = str.split(";")
+			for conf_path in conf_paths:
+				criteo_train.train_model_with_conf(conf_path)
 		elif mode == 2:
 			from train import criteo_train
 			model_names = ["FM"]

@@ -55,7 +55,7 @@ if __name__ == "__main__":
 			conf_paths = args.conf_path.split(";")
 			for conf_path in conf_paths:
 				print "Train with Conf path %s"%conf_path
-				criteo_train.train_model_with_conf(args.conf_path)
+				criteo_train.train_model_with_conf(conf_path)
 	elif args.split_field:
 		from util import preprocess, log
 		log.config_log("./log/split_%s_"%(args.input.replace('/', '_')))

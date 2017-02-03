@@ -61,7 +61,7 @@ class LR(BaseModel):
 class FM(BaseModel):
     default_params = {
         'input_dim': "To fill input_dim", # To Fill
-        'factor_order': 2,
+        'factor_order': 10,
         'opt_algo': 'adam',
         'learning_rate': 0.01,
         'l2_w': 0.01,
@@ -106,7 +106,9 @@ class FM(BaseModel):
             tf.global_variables_initializer().run(session=self.sess)
 
     def run(self, fetches, X=None, y=None):
-        feed_dict = {self.X: X}
+        feed_dict = {}
+        if X is not None:
+            feed_dict[self.X] = X
         if y is not None:
             feed_dict[self.y] = y
         return self.sess.run(fetches, feed_dict)

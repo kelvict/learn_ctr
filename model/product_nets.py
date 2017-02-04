@@ -334,7 +334,7 @@ class PNN1(BaseModel):
         for i in range(2, len(layer_sizes) - 1):
             layer_input = layer_sizes[i]
             layer_output = layer_sizes[i + 1]
-            init_vars.append(('w%d' % i, [layer_input, layer_output], 'tnormal',))
+            init_vars.append(('w%d' % i, [layer_input, layer_output], 'tnormal', dtype))
             init_vars.append(('b%d' % i, [layer_output], 'zero', dtype))
         self.graph = tf.Graph()
         with self.graph.as_default():

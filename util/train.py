@@ -249,7 +249,9 @@ def init_var_map(init_vars, init_path=None):
         load_var_map = pkl.load(open(init_path, 'rb'))
         print 'load variable map from', init_path, load_var_map.keys()
     var_map = {}
+    #print init_vars
     for var_name, var_shape, init_method, dtype in init_vars:
+        #print var_name, var_shape, init_method, dtype
         if init_method == 'zero':
             var_map[var_name] = tf.Variable(tf.zeros(var_shape, dtype=dtype), dtype=dtype)
         elif init_method == 'one':

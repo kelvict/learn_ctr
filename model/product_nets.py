@@ -311,6 +311,7 @@ class PNN1(BaseModel):
         'layer_sizes': ["To fill field_sizes", 10, 1],
         'layer_acts': [None, None, None],
         'layer_keeps': [1, 1, 1],
+        'short_cuts':[None, None, None],
         'opt_algo': 'gd',
         'learning_rate': 1,
         'layer_l2': [0.001, 0.001, 0.001],
@@ -318,7 +319,7 @@ class PNN1(BaseModel):
         'random_seed': 0,
         "init_path":None,
     }
-    def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, layer_l2=None, kernel_l2=None,
+    def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, short_cuts=None, layer_l2=None, kernel_l2=None,
                  init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None):
         init_vars = []
         num_inputs = len(layer_sizes[0])
@@ -338,6 +339,8 @@ class PNN1(BaseModel):
             init_vars.append(('b%d' % i, [layer_output], 'zero', dtype))
         self.graph = tf.Graph()
         with self.graph.as_default():
+            layers = []
+
             if random_seed is not None:
                 tf.set_random_seed(random_seed)
             self.X = [tf.sparse_placeholder(dtype) for i in range(num_inputs)]
@@ -352,6 +355,7 @@ class PNN1(BaseModel):
                         for i in range(num_inputs)]),
                     layer_acts[0]),
                 layer_keeps[0])
+            layers.append(l)
 
             w1 = self.vars['w1']
             k1 = self.vars['k1']
@@ -372,18 +376,20 @@ class PNN1(BaseModel):
                     tf.matmul(l, w1) + b1 + p,
                     layer_acts[1]),
                 layer_keeps[1])
+            layers.append(l)
 
             for i in range(2, len(layer_sizes) - 1):
                 wi = self.vars['w%d' % i]
                 bi = self.vars['b%d' % i]
                 l = tf.nn.dropout(
                     train_util.activate(
-                        tf.matmul(l, wi) + bi,
+                        tf.matmul(l, wi) + bi if short_cuts[i] is None
+                        else tf.matmul(l, wi) + bi + layers[short_cuts[i]],
                         layer_acts[i]),
                     layer_keeps[i])
-
+                layers.append(l)
+                print i, layers
             self.y_prob = tf.sigmoid(l)
-
             self.loss = tf.reduce_mean(
                 tf.nn.sigmoid_cross_entropy_with_logits(l, self.y))
             if layer_l2 is not None:

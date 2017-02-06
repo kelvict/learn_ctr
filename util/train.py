@@ -240,7 +240,7 @@ def predict(model, eval_data, batch_size=100000):
     if float(n_iter) != float(inst_size) / batch_size:
         n_iter = n_iter + 1
     for j in xrange(n_iter):
-        util.log.log("Predict in iter %d"%(j))
+        #util.log.log("Predict in iter %d"%(j))
         X, y = util.train.slice(eval_data, j * batch_size,
                                 min(batch_size, inst_size - j * batch_size))
         preds.append(model.run(model.y_prob, X))

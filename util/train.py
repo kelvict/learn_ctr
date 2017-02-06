@@ -9,7 +9,7 @@ import numpy as np
 import tensorflow as tf
 from scipy.sparse import coo_matrix
 
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, log_loss
 from sklearn.externals import joblib
 from sklearn.utils import shuffle as sklearn_shuffle
 
@@ -209,7 +209,12 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
             util.log.log("Cal AUC")
             train_score = roc_auc_score(train_data[1], train_preds)
             test_score = roc_auc_score(test_data[1], test_preds)
-            util.log.log("[%d]\tloss:%f\ttrain-auc:%f\teval-auc:%f"%(i, np.mean(losses), train_score, test_score))
+            train_loss = log_loss(train_data[1], train_preds)
+            test_loss = log_loss(test_data[1], test_preds)
+            util.log.log("[%d]\tavg-loss:%f\ttrain-auc:%f\teval-auc:%f\ttrain-loss:%f\teval-loss:%f"
+                         %(i, np.mean(losses), train_score, test_score, train_loss, test_loss))
+            print "[%d]\tavg-loss:%f\ttrain-auc:%f\teval-auc:%f\ttrain-loss:%f\teval-loss:%f"\
+                  %(i, np.mean(losses), train_score, test_score, train_loss, test_loss)
         else:
             train_score = -1
             test_score = -1

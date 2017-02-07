@@ -203,9 +203,9 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
             losses = [loss]
         if ( i + 1 ) % eval_interval == 0:
             util.log.log("Evaludate in epoch %d"%i)
-            train_preds = predict(model, train_data, 100000)
+            train_preds = predict(model, train_data, 50000)
             util.log.log("Predict Test Set")
-            test_preds = predict(model, test_data, 100000)
+            test_preds = predict(model, test_data, 50000)
             util.log.log("Cal AUC")
             train_score = roc_auc_score(train_data[1], train_preds)
             test_score = roc_auc_score(test_data[1], test_preds)

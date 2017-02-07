@@ -8,6 +8,7 @@ from sklearn.metrics import roc_auc_score
 import numpy as np
 import json
 import util
+import time
 
 from model.product_nets import LR, FM, FNN, CCPM, PNN1, PNN2
 
@@ -45,6 +46,7 @@ def train_model_with_conf(conf_path):
 
 			util.train.train(model,
 							 should_split_by_field=Model in SPLIT_BY_FIELD_MODELS,
+							 train_log_path="./log/criteo_%s_.%s.log.json"%(conf['model_name'], time.strftime("%Y%m%d_%H%M%S")),
 							 **conf)
 			if conf['should_dump_model']:
 				model.dump(conf["model_dump_path"])

@@ -138,7 +138,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
           batch_size=256, train_set_percent = 0.75,
           should_split_by_field=False, field_sizes_pkl_path=None,
           should_early_stop=True, early_stop_interval=10, should_dump_model=False,
-          model_dump_path="", shuffle_trainset=True, eval_interval=2,**kwargs):
+          model_dump_path="", shuffle_trainset=True, eval_interval=2, train_log_path="", **kwargs):
     util.log.log("Start to train model")
     util.log.log("Loading trainset and labels")
     if testset_csr_pkl_path is None:
@@ -219,11 +219,15 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
         else:
             train_score = -1
             test_score = -1
+            train_loss = -1
+            test_loss = -1
         history_infos.append({
             "losses":losses,
             "avg-loss":np.mean(losses),
             "train-auc":train_score,
-            "test-auc":test_score
+            "test-auc":test_score,
+            "train-loss":train_loss,
+            "test-loss":test_loss
         })
         history_test_auc.append(test_score)
         best_test_auc_epoch = np.argmax(history_test_auc)
@@ -232,6 +236,15 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
             break
     if should_dump_model:
         model.dump(model_dump_path)
+    if len(train_log_path) != 0:
+        json_log = {
+            "conf": kwargs,
+            "eval_log": history_infos
+        }
+        fo = open(train_log_path, "w")
+        json.dump(json_log, fo, indent=True, default=util.json_util.json_numpy_serialzer)
+        fo.close()
+        util.log.log("log json in %s"%train_log_path)
 
 def predict(model, eval_data, batch_size=100000):
     preds = []

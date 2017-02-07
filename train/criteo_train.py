@@ -31,6 +31,7 @@ def train_model_with_conf(conf_path):
 	conf = json.load(fi)
 	fi.close()
 	util.log.config_log("./log/criteo_%s_"%(conf['model_name']))
+	util.log.log("Train with conf: %s"%conf_path)
 	for Model in CRITEO_MODELS:
 		if conf['model_name'] == Model.__name__:
 			field_sizes = joblib.load(conf['field_sizes_pkl_path'])

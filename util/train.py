@@ -203,10 +203,10 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
             _, loss = model.run(fetches, X, y)
             losses = [loss]
         if ( i + 1 ) % eval_interval == 0:
-            util.log.log("Evaludate in epoch %d"%i)
-            train_preds = predict(model, train_data, 50000)
+            util.log.log("Evaluate in epoch %d"%i)
+            train_preds = predict(model, train_data, 100000)
             util.log.log("Predict Test Set")
-            test_preds = predict(model, test_data, 50000)
+            test_preds = predict(model, test_data, 100000)
             util.log.log("Cal AUC")
             train_score = roc_auc_score(train_data[1], train_preds)
             test_score = roc_auc_score(test_data[1], test_preds)
@@ -241,13 +241,11 @@ def predict(model, eval_data, batch_size=100000):
     if float(n_iter) != float(inst_size) / batch_size:
         n_iter = n_iter + 1
     for j in xrange(n_iter):
-        util.log.log("Predict in iter %d"%(j))
+        #util.log.log("Predict in iter %d"%(j))
         X, y = util.train.slice(eval_data, j * batch_size,
                                 min(batch_size, inst_size - j * batch_size))
-        util.log.log("Sliced in iter %d"%(j))
+        #util.log.log("Sliced in iter %d"%(j))
         preds.append(model.run(model.y_prob, X))
-        del X
-        del y
     util.log.log("Stack Prediction Result")
     preds = np.vstack(preds)
     return preds

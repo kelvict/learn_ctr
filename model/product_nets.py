@@ -351,7 +351,7 @@ class PNN1(BaseModel):
             l = tf.nn.dropout(
                 train_util.activate(
                     tf.concat(1, [
-                        tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) + b0[i]
+                        tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) + b0[i] #transform to embedding
                         for i in range(num_inputs)]),
                     layer_acts[0]),
                 layer_keeps[0])
@@ -458,22 +458,22 @@ class PNN2(BaseModel):
         with self.graph.as_default():
             if random_seed is not None:
                 tf.set_random_seed(random_seed)
-            self.X = [tf.sparse_placeholder(dtype) for i in range(num_inputs)]
+            self.X = [tf.sparse_placeholder(dtype) for i in range(num_inputs)] #one hot feat per field
             self.y = tf.placeholder(dtype)
             self.vars = train_util.init_var_map(init_vars, init_path)
-            w0 = [self.vars['w0_%d' % i] for i in range(num_inputs)]
+            w0 = [self.vars['w0_%d' % i] for i in range(num_inputs)] #one hot to embedding transformer
             b0 = [self.vars['b0_%d' % i] for i in range(num_inputs)]
             l = tf.nn.dropout(
                 train_util.activate(
-                    tf.concat(1, [
-                        tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) + b0[i]
+                    tf.concat(1, [ #concat to #field * emb_dim 39 * 10
+                        tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) + b0[i] # transform to embedding [#field, emb_dim] [39, 10]
                         for i in range(num_inputs)]),
                     layer_acts[0]),
                 layer_keeps[0])
             w1 = self.vars['w1']
             k1 = self.vars['k1']
             b1 = self.vars['b1']
-            z = tf.reduce_sum(tf.reshape(l, [-1, num_inputs, factor_order]), 1)
+            z = tf.reduce_sum(tf.reshape(l, [-1, num_inputs, factor_order]), 1) # sum all embed of embed dim -> (emb_dim,)
             p = tf.reshape(
                 tf.batch_matmul(
                     tf.reshape(z, [-1, factor_order, 1]),

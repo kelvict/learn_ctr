@@ -10,11 +10,13 @@ import json
 import util
 import time
 
-from model.product_nets import LR, FM, FNN, CCPM, PNN1, PNN2
+from model.product_nets import LR, FM, FNN, CCPM, PNN1, PNN2, RecIPNN
 
 
-CRITEO_MODELS = [LR, FM, FNN, CCPM, PNN1, PNN2]
-SPLIT_BY_FIELD_MODELS = [FNN, CCPM, PNN1, PNN2]
+CRITEO_MODELS = [LR, FM, FNN, CCPM, PNN1, PNN2, RecIPNN]
+SPLIT_BY_FIELD_MODELS = [FNN, CCPM, PNN1, PNN2, RecIPNN]
+CTR_MODELS = [LR, FM, FNN, CCPM, PNN1, PNN2]
+REC_MODELS = [RecIPNN]
 def create_default_conf(dump_path, model_name=LR.__name__):
 	for Model in CRITEO_MODELS:
 		if model_name == Model.__name__:
@@ -27,7 +29,7 @@ def create_default_conf(dump_path, model_name=LR.__name__):
 			)
 	return None
 
-def train_model_with_conf(conf_path):
+def train_model_with_conf(conf_path, ctr_or_recommend=True):
 	fi = open(conf_path)
 	conf = json.load(fi)
 	fi.close()
@@ -47,6 +49,7 @@ def train_model_with_conf(conf_path):
 			util.train.train(model,
 							 should_split_by_field=Model in SPLIT_BY_FIELD_MODELS,
 							 train_log_path="./log/criteo_%s_.%s.log.json"%(conf['model_name'], time.strftime("%Y%m%d_%H%M%S")),
+							 ctr_or_recommend=ctr_or_recommend,
 							 **conf)
 			if conf['should_dump_model']:
 				model.dump(conf["model_dump_path"])

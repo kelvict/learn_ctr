@@ -507,8 +507,8 @@ class RecIPNN(BaseModel):
                     layer_keeps[i])
                 layers.append(l)
                 print i, layers
-            self.y_score = tf.sigmoid(l)
-            self.loss = tf.reduce_mean(tf.square(self.y-self.y_score))
+            self.y_prob = l
+            self.loss = tf.sqrt(tf.reduce_mean(tf.square(self.y-self.y_prob)))
 
             if layer_l2 is not None:
                 for i in range(num_inputs):

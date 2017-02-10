@@ -6,7 +6,8 @@ import argparse
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
-
+	#Handle Different Dataset
+	parser.add_argument("--ml", action="store_true", help="do movie_lens action")
 	#Preprocess Argument
 	parser.add_argument("-p", "--preprocess", action="store_true", help="should preprocess data")
 	parser.add_argument("-i", "--input", type=str, help="set input data path")
@@ -37,25 +38,24 @@ if __name__ == "__main__":
 	parser.add_argument("--gpu", type=str, help="Set CUDA_VISIBLE_DEVICES", default="")
 	args = parser.parse_args()
 
-	#MovieLens
-	parser.add_argument("--ml", action="store_true", help="do movie_lens action")
+
 	if args.ml:
 		if args.preprocess:
 			from preprocesser import movielens_preprocess
 			movielens_preprocess.preprocess_1m()
 		elif args.train:
 			import os
-		if len(args.gpu) != 0:
-			os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+			if len(args.gpu) != 0:
+				os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
 
-		from train import criteo_train
-		if len(args.create_conf) != 0:
-			criteo_train.create_default_conf(args.conf_path, args.create_conf)
-		else:
-			conf_paths = args.conf_path.split(";")
-			for conf_path in conf_paths:
-				print "Train with Conf path %s"%conf_path
-				criteo_train.train_model_with_conf(conf_path)
+			from train import criteo_train
+			if len(args.create_conf) != 0:
+				criteo_train.create_default_conf(args.conf_path, args.create_conf)
+			else:
+				conf_paths = args.conf_path.split(";")
+				for conf_path in conf_paths:
+					print "Train with Conf path %s"%conf_path
+					criteo_train.train_model_with_conf(conf_path, ctr_or_recommend=False)
 	elif args.preprocess:
 		print args.input
 		from preprocesser import criteo_preprocesser

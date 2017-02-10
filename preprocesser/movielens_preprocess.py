@@ -33,9 +33,11 @@ def preprocess_1m():
 	timestamp = ratings_df['timestamp']
 	timestamp.to_csv(default_1m_timestamp_path, header=None, index=None)
 	user_onehot_enc = OneHotEncoder()
-	user_mat = user_onehot_enc.fit_transform(ratings_df['user']).tocsr()
+	user_mat = user_onehot_enc.fit_transform(
+		np.atleast_2d(ratings_df['user'].values).T).tocsr()
 	item_onehot_enc = OneHotEncoder()
-	item_mat = item_onehot_enc.fit_transform(ratings_df['item']).tocsr()
+	item_mat = item_onehot_enc.fit_transform(
+		np.atleast_2d(ratings_df['item'].values).T).tocsr()
 	field_sizes = [user_mat.shape[1], item_mat.shape[1]]
 	dataset = [user_mat, item_mat]
 	joblib.dump(field_sizes, default_1m_user_item_field_sizes_path)

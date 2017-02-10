@@ -9,7 +9,7 @@ import numpy as np
 import tensorflow as tf
 from scipy.sparse import coo_matrix
 
-from sklearn.metrics import roc_auc_score, log_loss
+from sklearn.metrics import roc_auc_score, log_loss, mean_squared_error
 from sklearn.externals import joblib
 from sklearn.utils import shuffle as sklearn_shuffle
 
@@ -138,7 +138,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
           batch_size=256, train_set_percent = 0.75,
           should_split_by_field=False, field_sizes_pkl_path=None,
           should_early_stop=True, early_stop_interval=10, should_dump_model=False,
-          model_dump_path="", shuffle_trainset=True, eval_interval=2, train_log_path="", **kwargs):
+          model_dump_path="", shuffle_trainset=True, eval_interval=2, train_log_path="", ctr_or_recommend=True, **kwargs):
     util.log.log("Start to train model")
     util.log.log("Loading trainset and labels")
     if testset_csr_pkl_path is None:
@@ -207,28 +207,42 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
             train_preds = predict(model, train_data, 100000)
             util.log.log("Predict Test Set")
             test_preds = predict(model, test_data, 100000)
-            util.log.log("Cal AUC")
-            train_score = roc_auc_score(train_data[1], train_preds)
-            test_score = roc_auc_score(test_data[1], test_preds)
-            train_loss = log_loss(train_data[1], train_preds)
-            test_loss = log_loss(test_data[1], test_preds)
-            util.log.log("[%d]\tavg-loss:%f\ttrain-auc:%f\teval-auc:%f\ttrain-loss:%f\teval-loss:%f"
-                         %(i, np.mean(losses), train_score, test_score, train_loss, test_loss))
-            print "[%d]\tavg-loss:%f\ttrain-auc:%f\teval-auc:%f\ttrain-loss:%f\teval-loss:%f"\
-                  %(i, np.mean(losses), train_score, test_score, train_loss, test_loss)
+            util.log.log("Cal Evaluation")
+            if ctr_or_recommend:
+                train_score = roc_auc_score(train_data[1], train_preds)
+                test_score = roc_auc_score(test_data[1], test_preds)
+                train_loss = log_loss(train_data[1], train_preds)
+                test_loss = log_loss(test_data[1], test_preds)
+                util.log.log("[%d]\tavg-loss:%f\ttrain-auc:%f\teval-auc:%f\ttrain-loss:%f\teval-loss:%f"
+                             %(i, np.mean(losses), train_score, test_score, train_loss, test_loss))
+                print "[%d]\tavg-loss:%f\ttrain-auc:%f\teval-auc:%f\ttrain-loss:%f\teval-loss:%f"\
+                      %(i, np.mean(losses), train_score, test_score, train_loss, test_loss)
+            else:
+                train_score = np.sqrt(mean_squared_error(train_data[1], train_preds))
+                test_score = np.sqrt(mean_squared_error(test_data[1], test_preds))
+                util.log.log("[%d]\tavg-loss:%f\ttrain-rmse:%f\teval-rmse:%f"
+                             %(i, np.mean(losses), train_score, test_score))
+                print "[%d]\tavg-loss:%f\ttrain-rmse:%f\teval-rmse:%f"\
+                      %(i, np.mean(losses), train_score, test_score)
         else:
             train_score = -1
             test_score = -1
-            train_loss = -1
-            test_loss = -1
-        history_infos.append({
-            "losses":losses,
-            "avg-loss":np.mean(losses),
-            "train-auc":train_score,
-            "test-auc":test_score,
-            "train-loss":train_loss,
-            "test-loss":test_loss
-        })
+        if ctr_or_recommend:
+            history_infos.append({
+                "losses":losses,
+                "avg-loss":np.mean(losses),
+                "train-auc":train_score,
+                "test-auc":test_score,
+                "train-loss":train_loss,
+                "test-loss":test_loss
+            })
+        else:
+            history_infos.append({
+                "losses":losses,
+                "avg-loss":np.mean(losses),
+                "train-rmse":train_score,
+                "test-rmse":test_score,
+            })
         history_test_auc.append(test_score)
         best_test_auc_epoch = np.argmax(history_test_auc)
         if should_early_stop and i - best_test_auc_epoch >= early_stop_interval and abs(history_test_auc[-1]-history_test_auc[best_test_auc_epoch]) < 1e-5:

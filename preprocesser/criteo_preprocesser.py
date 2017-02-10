@@ -15,6 +15,7 @@ from scipy import sparse
 from sklearn.externals import joblib
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
+import xgboost as xgb
 
 default_whole_data_path = 'dac_sample/dac_sample.csv'
 
@@ -131,7 +132,6 @@ def update_default_contin_feat_means_path(feat_mean_raw_trainset=default_feat_me
     log("Dump Contin Feat Means to " + dump_path)
     dump_contin_feat_means(contin_df, dump_path)
 
-
 def get_value_counts_arr(discrete_df):
     arr = []
     for col in xrange(discrete_df.shape[1]):
@@ -162,18 +162,6 @@ def get_feat_map(discrete_df, offset=0):
 def get_contin_feat_map(contin_df, offset=0):
     return pd.DataFrame(range(offset,offset+len(contin_df.columns),1),
                         index=contin_df.columns, columns=['cnt_id'])
-
-def test_get_feat_map():
-    print os.getcwd()
-    raw_trainset = "dac_sample/dac_sample.csv"
-    log("Start to load and split dataset: " + raw_trainset)
-    labels, contin_df, discrete_df = get_labels_contin_discrete_feats(raw_trainset)
-
-    labels = labels[:10000]
-    contin_df = contin_df[:10000]
-    discrete_df = discrete_df[:10000]
-
-    print get_feat_map(discrete_df)
 
 def process_contin_df(contin_df, path_prefix="discrete", n_interval=1000, n_split=2, min_freq=10):
     log("Start to process contin df")
@@ -267,16 +255,13 @@ def process_discrete_df(discrete_df, path_prefix="discrete", n_split=2, min_freq
     log("End to process discrete df")
 
 
-def preprocess(raw_trainset, is_test=False, n_split=2, discrete_min_freq=4000, n_contin_intervals=1000, contin_min_freq=10, split_by_field=False):
+def preprocess(raw_trainset, is_test=False, n_split=2, discrete_min_freq=4000, n_contin_intervals=1000,
+               contin_min_freq=10, split_by_field=False, add_xgb_feat=False, drop_contin_feat=False,
+               xgb_model_load_path=""):
     log("Start to load and split dataset: " + raw_trainset)
     labels, contin_df, discrete_df = get_labels_contin_discrete_feats(raw_trainset)
     log("line "+str(labels.shape[0]))
     log("Sep!")
-
-    if is_test:
-        labels = labels[:100]
-        contin_df = contin_df[:100]
-        discrete_df = discrete_df[:100]
 
     cur_time = time.strftime("%Y%m%d_%H%M%S")
     path_prefix = "%s.%s"%(raw_trainset, cur_time)
@@ -285,7 +270,7 @@ def preprocess(raw_trainset, is_test=False, n_split=2, discrete_min_freq=4000, n
     n_contin_split = n_split if not split_by_field else contin_df.shape[1]
 
     dump_col(labels,path_prefix+'.labels.txt')
-    del labels
+
     log("To Cache Contin df")
     joblib.dump(contin_df, "%s.contin_df.pkl"%path_prefix)
     log("Contin df Cached")
@@ -297,59 +282,151 @@ def preprocess(raw_trainset, is_test=False, n_split=2, discrete_min_freq=4000, n
     del discrete_df
     gc.collect()
     log("End process discrete df")
-    log("Load contin df cache")
-    contin_df = joblib.load("%s.contin_df.pkl"%path_prefix)
-    log("Start to process contin df")
-    contin_discrete_path_prefix = "%s.contin_%d_%d"%(path_prefix, n_contin_intervals, contin_min_freq)
-    process_contin_df(contin_df, path_prefix=contin_discrete_path_prefix, n_interval=n_contin_intervals, n_split=n_contin_split, min_freq=contin_min_freq)
-    del contin_df
-    gc.collect()
-    log("End process contin df")
+
+    if not drop_contin_feat:
+        log("Load contin df cache")
+        contin_df = joblib.load("%s.contin_df.pkl"%path_prefix)
+        log("Start to process contin df")
+        contin_discrete_path_prefix = "%s.contin_%d_%d"%(path_prefix, n_contin_intervals, contin_min_freq)
+        process_contin_df(contin_df, path_prefix=contin_discrete_path_prefix, n_interval=n_contin_intervals, n_split=n_contin_split, min_freq=contin_min_freq)
+        del contin_df
+        gc.collect()
+        log("End process contin df")
+
+    if add_xgb_feat:
+        log("Load contin df cache")
+        contin_df = joblib.load("%s.contin_df.pkl"%path_prefix)
+        log("Start to process xgb feat")
+        make_gbdt_features(contin_df, labels,
+                           split_by_field=split_by_field, path_prefix=path_prefix)
+        del contin_df
+        del labels
+        gc.collect()
+        log("End process xgb feat")
+
     disc_field_sizes = joblib.load("%s.field_sizes.pkl"%(discrete_path_prefix))
-    contin_field_sizes = joblib.load("%s.field_sizes.pkl"%(contin_discrete_path_prefix))
-    all_field_size = disc_field_sizes + contin_field_sizes
+    if not drop_contin_feat:
+        contin_field_sizes = joblib.load("%s.field_sizes.pkl"%(contin_discrete_path_prefix))
+    else:
+        contin_field_sizes = []
+    if add_xgb_feat:
+        xgb_field_sizes = joblib.load("%s.xgb.field_sizes.pkl"%path_prefix)
+    else:
+        xgb_field_sizes = []
+
+    all_field_size = disc_field_sizes + contin_field_sizes + xgb_field_sizes
     joblib.dump(all_field_size, "%s.all_field_sizes.pkl"%path_prefix)
     log("Start to hstack discrete contin sparse one hot mat with differenct split")
     log("loading discrete")
     discrete_sparse_one_hot_mats = [joblib.load("%s.one_hot_discrete%d_in_%d.pkl"%(
         discrete_path_prefix, i, n_discrete_split)) for i in xrange(n_discrete_split)]
-    log("loading contin")
-    contin_discrete_sparse_one_hot_mats = [joblib.load("%s.one_hot_discrete%d_in_%d.pkl"%(
+
+
+    if not drop_contin_feat:
+        log("loading contin")
+        contin_discrete_sparse_one_hot_mats = [joblib.load("%s.one_hot_discrete%d_in_%d.pkl"%(
         contin_discrete_path_prefix, i, n_contin_split)) for i in xrange(n_contin_split)]
+    else:
+        contin_discrete_sparse_one_hot_mats = []
+    if add_xgb_feat:
+        xgb_one_hot_mats = joblib.load("%s.xgb.one_hot_mats.pkl"%path_prefix)
+    else:
+        xgb_one_hot_mats = []
+    log("Hstacking discrete mat %d contin discrete mat %d xgb mat %d"
+        %(len(discrete_sparse_one_hot_mats), len(contin_discrete_sparse_one_hot_mats), len(xgb_one_hot_mats)))
+    disc_mats_len = len(discrete_sparse_one_hot_mats)
+    contin_mats_len = len(contin_discrete_sparse_one_hot_mats)
+    xgb_mats_len = len(xgb_one_hot_mats)
 
-    log("Hstacking discrete mat %d contin discrete mat %d"
-        %(len(discrete_sparse_one_hot_mats), len(contin_discrete_sparse_one_hot_mats)))
-
-    all_split_by_field_mats = discrete_sparse_one_hot_mats+contin_discrete_sparse_one_hot_mats
+    all_split_by_field_mats = discrete_sparse_one_hot_mats\
+                              +contin_discrete_sparse_one_hot_mats\
+                              +xgb_one_hot_mats
     del discrete_sparse_one_hot_mats
     del contin_discrete_sparse_one_hot_mats
+    del xgb_one_hot_mats
     gc.collect()
+
+    whole_prefix = "%s.discrete_%d_%d_contin_%d_%d_%d_xgb_%d"\
+                   %(path_prefix, discrete_min_freq, disc_mats_len,
+                  n_contin_intervals, contin_min_freq, contin_mats_len,
+                  xgb_mats_len)
+
     log("all_split_by_field_mats_len: %s"%(str(len(all_split_by_field_mats))))
-    joblib.dump(all_split_by_field_mats, "%s.discrete_%d_contin_%d_%d.all_split_by_field_coo_mats.pkl"
-                %(path_prefix, discrete_min_freq, n_contin_intervals, contin_min_freq))
+    joblib.dump(all_split_by_field_mats, "%s.all_split_by_field_coo_mats.pkl"
+                %(whole_prefix))
     log("COO Mats to CSR Mats")
     all_split_by_field_mats = [mat.tocsr() for mat in all_split_by_field_mats]
-    joblib.dump(all_split_by_field_mats, "%s.discrete_%d_contin_%d_%d.all_split_by_field_csr_mats.pkl"
-                %(path_prefix, discrete_min_freq, n_contin_intervals, contin_min_freq))
+    joblib.dump(all_split_by_field_mats, "%s.all_split_by_field_csr_mats.pkl"
+                %(whole_prefix))
     del all_split_by_field_mats
     gc.collect()
     log("Loading all COO Mats")
-    all_split_by_field_mats = joblib.load("%s.discrete_%d_contin_%d_%d.all_split_by_field_coo_mats.pkl"
-                %(path_prefix, discrete_min_freq, n_contin_intervals, contin_min_freq))
+    all_split_by_field_mats = joblib.load("%s.all_split_by_field_coo_mats.pkl"
+                %(whole_prefix))
     whole_mat = sparse.hstack(all_split_by_field_mats)
     del all_split_by_field_mats
     gc.collect()
     log("Dumping COO: %s"%str(whole_mat.shape))
-    joblib.dump(whole_mat, "%s.discrete_%d_contin_%d_%d.whole_one_hot_coo.pkl"
-                %(path_prefix, discrete_min_freq, n_contin_intervals, contin_min_freq))
+    joblib.dump(whole_mat, "%s.whole_one_hot_coo.pkl"
+                %(whole_prefix))
     log("To CSR")
     whole_mat = whole_mat.tocsr()
     log("Start to dump whole matrix")
-    joblib.dump(whole_mat, "%s.discrete_%d_contin_%d_%d.whole_one_hot_csr.pkl"
-                %(path_prefix, discrete_min_freq, n_contin_intervals, contin_min_freq))
+    joblib.dump(whole_mat, "%s.whole_one_hot_csr.pkl"
+                %(whole_prefix))
     del whole_mat
     gc.collect()
     log("End to hstack discrete contin sparse one hot mat with differenct split")
 
+default_xgb_params = {
+    'max_depth': 8,
+    'colsample_bytree': 0.8,
+    'colsample_bylevel': 0.8,
+    'objective':'binary:logistic',
+    'eval_metric': ['auc','logloss'],
+    'gamma': 0.1,
+}
+
+def make_gbdt_features(df, labels, xgb_params=default_xgb_params, split_by_field=False, path_prefix="", model_load_path=""):
+    n_round = 15
+    train_data = xgb.DMatrix(df.values, labels,missing=np.nan)
+    if len(model_load_path)==0:
+        bst = xgb.train(xgb_params, train_data, n_round)
+        joblib.dump(bst,"%s.xgb_model.pkl"%path_prefix)
+    else:
+        bst = joblib.load(model_load_path)
+    leaf_idxs = bst.predict(train_data, pred_leaf=True)
+    onehot_encs = []
+    field_sizes = []
+    mats = []
+    if split_by_field:
+        leaf_idxs_every_col = np.hsplit( leaf_idxs ,leaf_idxs.shape[1])
+        for i in xrange(len(leaf_idxs_every_col)):
+            log("encoding col %d"%i)
+            col = leaf_idxs_every_col[i]
+            lbl_enc = LabelEncoder()
+            onehot_enc = OneHotEncoder()
+
+            one_hot_leaf_idxs = onehot_enc.fit_transform(np.atleast_2d(lbl_enc.fit_transform(col)).T)
+            onehot_encs.append(onehot_enc)
+            mats.append(one_hot_leaf_idxs)
+            field_sizes.append(one_hot_leaf_idxs.shape[1])
+    else:
+        lbl_enc = LabelEncoder()
+        onehot_enc = OneHotEncoder()
+        one_hot_leaf_idxs = onehot_enc.fit_transform(lbl_enc.fit_transform(leaf_idxs))
+        onehot_encs.append(onehot_enc)
+        mats.append(one_hot_leaf_idxs)
+        field_sizes = preprocess_util.get_field_sizes_from_one_hot_encoders([onehot_enc])
+    joblib.dump(onehot_encs,"%s.xgb.one_hot_encoders.pkl"%(path_prefix))
+    joblib.dump(field_sizes,"%s.xgb.field_sizes.pkl"%(path_prefix))
+    joblib.dump(mats,"%s.xgb.one_hot_mats.pkl"%(path_prefix))
+
+def test_gbdt_features():
+    path = "/Users/kelvin_zhang/Project/graduate_design/dataset/ctr/criteo/dac_sample/dac_sample.csv"
+    labels, contin_df, discrete_df = get_labels_contin_discrete_feats(
+        filepath="/Users/kelvin_zhang/Project/graduate_design/dataset/ctr/criteo/dac_sample/dac_sample.csv")
+    make_gbdt_features(contin_df, labels,split_by_field=True,path_prefix=path)
+
 if __name__ == "__main__":
-    pass
+    test_gbdt_features()

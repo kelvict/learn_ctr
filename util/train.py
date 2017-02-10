@@ -225,8 +225,14 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
                 print "[%d]\tavg-loss:%f\ttrain-rmse:%f\teval-rmse:%f"\
                       %(i, np.mean(losses), train_score, test_score)
         else:
-            train_score = -1
-            test_score = -1
+            if ctr_or_recommend:
+                train_score = -1
+                test_score = -1
+                train_loss = -1
+                test_loss = -1
+            else:
+                train_score = -1
+                test_score = -1
         if ctr_or_recommend:
             history_infos.append({
                 "losses":losses,

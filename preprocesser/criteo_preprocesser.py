@@ -132,7 +132,6 @@ def update_default_contin_feat_means_path(feat_mean_raw_trainset=default_feat_me
     log("Dump Contin Feat Means to " + dump_path)
     dump_contin_feat_means(contin_df, dump_path)
 
-
 def get_value_counts_arr(discrete_df):
     arr = []
     for col in xrange(discrete_df.shape[1]):
@@ -163,18 +162,6 @@ def get_feat_map(discrete_df, offset=0):
 def get_contin_feat_map(contin_df, offset=0):
     return pd.DataFrame(range(offset,offset+len(contin_df.columns),1),
                         index=contin_df.columns, columns=['cnt_id'])
-
-def test_get_feat_map():
-    print os.getcwd()
-    raw_trainset = "dac_sample/dac_sample.csv"
-    log("Start to load and split dataset: " + raw_trainset)
-    labels, contin_df, discrete_df = get_labels_contin_discrete_feats(raw_trainset)
-
-    labels = labels[:10000]
-    contin_df = contin_df[:10000]
-    discrete_df = discrete_df[:10000]
-
-    print get_feat_map(discrete_df)
 
 def process_contin_df(contin_df, path_prefix="discrete", n_interval=1000, n_split=2, min_freq=10):
     log("Start to process contin df")

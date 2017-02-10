@@ -447,6 +447,11 @@ class RecIPNN(BaseModel):
             layer_output = factor_order
             init_vars.append(('w0_%d' % i, [layer_input, layer_output], 'tnormal', dtype))
             init_vars.append(('b0_%d' % i, [layer_output], 'zero', dtype))
+        #add score bias for fields
+        user_item_fields = [0,1]
+        for i in user_item_fields:
+            field_size = layer_sizes[0][i]
+            init_vars.append(('field_score_b_%d'%i, [field_size], 'tnormal', dtype))
         init_vars.append(('w1', [num_inputs * factor_order, layer_sizes[2]], 'tnormal', dtype))
         init_vars.append(('k1', [num_inputs, layer_sizes[2]], 'tnormal', dtype))
         init_vars.append(('b1', [layer_sizes[2]], 'zero', dtype))

@@ -379,16 +379,15 @@ def preprocess(raw_trainset, is_test=False, n_split=2, discrete_min_freq=4000, n
     log("End to hstack discrete contin sparse one hot mat with differenct split")
 
 default_xgb_params = {
-    'max_depth': 8,
+    'max_depth': 6,
     'colsample_bytree': 0.8,
     'colsample_bylevel': 0.8,
     'objective':'binary:logistic',
-    'eval_metric': ['auc','logloss'],
     'gamma': 0.1,
 }
 
 def make_gbdt_features(df, labels, xgb_params=default_xgb_params, split_by_field=False, path_prefix="", model_load_path=""):
-    n_round = 15
+    n_round = 40
     train_data = xgb.DMatrix(df.values, labels,missing=np.nan)
     if len(model_load_path)==0:
         bst = xgb.train(xgb_params, train_data, n_round)

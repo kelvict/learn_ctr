@@ -140,27 +140,36 @@ def split_train_test_data(dataset_path, labels_path, trainset_rate, train_data_d
     if not isinstance(dataset, list):
         util.log.log("Start to handling trainset")
         train_set = dataset[:train_set_size]
+        util.log.log("Get Trainset")
         train_data = (train_set, train_labels)
+        util.log.log("Start to dump")
         joblib.dump(train_data,train_data_dump_path)
         del train_data
         del train_set
         gc.collect()
         util.log.log("Start to handling testset")
         test_set = dataset[train_set_size:]
+        util.log.log("Get Testset")
         test_data = (test_set, test_labels)
         joblib.dump(test_data,test_data_dump_path)
     else:
         util.log.log("Start to handling trainset")
         train_set = [field[:train_set_size] for field in dataset]
+        util.log.log("Get Trainset")
         train_data = (train_set, train_labels)
+        util.log.log("Start to dump")
         joblib.dump(train_data,train_data_dump_path)
+        util.log.log("dumped")
         del train_data
         del train_set
         gc.collect()
         util.log.log("Start to handling testset")
         test_set = [field[train_set_size:] for field in dataset]
+        util.log.log("Get Testset")
         test_data = (test_set, test_labels)
-        joblib.dump(test_data,test_data_dump_path)
+        util.log.log("Start to dump")
+        joblib.dump(test_data, test_data_dump_path)
+
     util.log.log("Start to split trainset and testset labels")
 
 

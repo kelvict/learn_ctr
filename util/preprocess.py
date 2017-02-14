@@ -175,11 +175,7 @@ def split_train_test_data(dataset_path, labels_path, trainset_rate, train_data_d
         joblib.dump(train_data,train_data_dump_path)
         util.log.log("dumped")
 
-    util.log.log("Start to split trainset and testset labels")
-
-
-
-
+    util.log.log("End split trainset and testset labels")
 
 if __name__ == "__main__":
     df = pd.DataFrame([range(10,20,1), range(20,30,1)])

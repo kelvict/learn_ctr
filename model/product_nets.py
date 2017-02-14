@@ -451,7 +451,7 @@ class RecIPNN(BaseModel):
         user_item_fields = [0,1]
         for i in user_item_fields:
             field_size = layer_sizes[0][i]
-            init_vars.append(('field_score_b_%d'%i, [field_size], 'tnormal', dtype))
+            init_vars.append(('field_score_b_%d'%i, [field_size, 1], 'tnormal', dtype))
         init_vars.append(('w1', [num_inputs * factor_order, layer_sizes[2]], 'tnormal', dtype))
         init_vars.append(('k1', [num_inputs, layer_sizes[2]], 'tnormal', dtype))
         init_vars.append(('b1', [layer_sizes[2]], 'zero', dtype))
@@ -512,7 +512,11 @@ class RecIPNN(BaseModel):
                     layer_keeps[i])
                 layers.append(l)
                 print i, layers
-            self.y_prob = l
+            self.score_bias = tf.zeros([1,1])
+            for i in user_item_fields:
+                self.score_bias = tf.add(self.score_bias, tf.sparse_tensor_dense_matmul(self.X[i], self.vars['field_score_b_%d'%i]))
+
+            self.y_prob = tf.add(l, self.score_bias)
             self.loss = tf.sqrt(tf.reduce_mean(tf.square(self.y-self.y_prob)))
 
             if layer_l2 is not None:

@@ -318,9 +318,10 @@ class PNN1(BaseModel):
         'kernel_l2': 0.001,
         'random_seed': 0,
         "init_path":None,
+        "p_mode":0
     }
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, short_cuts=None, layer_l2=None, kernel_l2=None,
-                 init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None):
+                 init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None, p_mode=0):
         init_vars = []
         num_inputs = len(layer_sizes[0])
         factor_order = layer_sizes[1]
@@ -330,7 +331,13 @@ class PNN1(BaseModel):
             init_vars.append(('w0_%d' % i, [layer_input, layer_output], 'tnormal', dtype))
             init_vars.append(('b0_%d' % i, [layer_output], 'zero', dtype))
         init_vars.append(('w1', [num_inputs * factor_order, layer_sizes[2]], 'tnormal', dtype))
-        init_vars.append(('k1', [num_inputs, layer_sizes[2]], 'tnormal', dtype))
+        print "Running in p_mode %d"%p_mode
+        if p_mode == 0:
+            init_vars.append(('k1', [num_inputs, layer_sizes[2]], 'tnormal', dtype))
+        elif p_mode == 1:
+            init_vars.append(('k1', [num_inputs * num_inputs, layer_sizes[2]], 'tnormal', dtype))
+        else:
+            init_vars.append(('k1', [num_inputs, layer_sizes[2]], 'tnormal', dtype))
 
         init_vars.append(('b1', [layer_sizes[2]], 'zero', dtype))
         for i in range(2, len(layer_sizes) - 1):
@@ -361,17 +368,36 @@ class PNN1(BaseModel):
             w1 = self.vars['w1']
             k1 = self.vars['k1']
             b1 = self.vars['b1']
-            p = tf.reduce_sum(
-                tf.reshape(
-                    tf.matmul(
-                        tf.reshape(
-                            tf.transpose(
-                                tf.reshape(l, [-1, num_inputs, factor_order]),
-                                [0, 2, 1]),
-                            [-1, num_inputs]),
-                        k1),
-                    [-1, factor_order, layer_sizes[2]]),
-                1)
+            if p_mode == 0:
+                p = tf.reduce_sum(
+                    tf.reshape(
+                        tf.matmul(
+                            tf.reshape(
+                                tf.transpose(
+                                    tf.reshape(l, [-1, num_inputs, factor_order]),
+                                    [0, 2, 1]),
+                                [-1, num_inputs]),
+                            k1),
+                        [-1, factor_order, layer_sizes[2]]),
+                    1)
+            elif p_mode == 1:
+                #slower inner product
+                feat_emb_mat = tf.reshape(l, [-1, num_inputs, factor_order])
+                feat_sim_vec = tf.reshape(tf.batch_matmul(
+                    feat_emb_mat,tf.transpose(feat_emb_mat,[0,2,1])),[-1, num_inputs * num_inputs])
+                p = tf.matmul(feat_sim_vec,k1)
+            else:
+                p = tf.reduce_sum(
+                    tf.reshape(
+                        tf.matmul(
+                            tf.reshape(
+                                tf.transpose(
+                                    tf.reshape(l, [-1, num_inputs, factor_order]),
+                                    [0, 2, 1]),
+                                [-1, num_inputs]),
+                            k1),
+                        [-1, factor_order, layer_sizes[2]]),
+                    1)
             l = tf.nn.dropout(
                 train_util.activate(
                     tf.matmul(l, w1) + b1 + p,
@@ -437,6 +463,7 @@ class RecIPNN(BaseModel):
         'kernel_l2': 0.001,
         'random_seed': 0,
         "init_path":None,
+        "p_mode":1
     }
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, short_cuts=None, layer_l2=None, kernel_l2=None,
                  init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None, p_mode=1):
@@ -464,7 +491,7 @@ class RecIPNN(BaseModel):
         for i in range(2, len(layer_sizes) - 1):
             layer_input = layer_sizes[i]
             layer_output = layer_sizes[i + 1]
-            init_vars.append(('w%d' % i, [layer_input, layer_output], 'tnormal', dtype))
+            init_vars.append(('w%d' % i, [layer_input, layer_output], 'normal_one', dtype)) #critical modify tnormal_zero to normal_one
             init_vars.append(('b%d' % i, [layer_output], 'zero', dtype))
         self.graph = tf.Graph()
         with self.graph.as_default():
@@ -508,8 +535,18 @@ class RecIPNN(BaseModel):
                 feat_sim_vec = tf.reshape(tf.batch_matmul(
                     feat_emb_mat,tf.transpose(feat_emb_mat,[0,2,1])),[-1, num_inputs * num_inputs])
                 p = tf.matmul(feat_sim_vec,k1)
-
-
+            else:
+                p = tf.reduce_sum(
+                    tf.reshape(
+                        tf.matmul(
+                            tf.reshape(
+                                tf.transpose(
+                                    tf.reshape(l, [-1, num_inputs, factor_order]),
+                                    [0, 2, 1]),
+                                [-1, num_inputs]),
+                            k1),
+                        [-1, factor_order, layer_sizes[2]]),
+                    1)
             l = tf.nn.dropout(
                 train_util.activate(
                     tf.matmul(l, w1) + b1 + p,

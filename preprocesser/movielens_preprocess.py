@@ -22,6 +22,7 @@ default_1m_user_item_csr_mats_path = default_1m_path+"user_item_csr_mats.pkl"
 
 default_1m_user_item_train_data_path = default_1m_path+"user_item_train_data.pkl"
 default_1m_user_item_test_data_path = default_1m_path+"user_item_test_data.pkl"
+
 def preprocess_1m():
 	ratings_df = pd.read_csv(default_1m_rating_path,sep="::", header=None,
 	                      names=["user", "item", "rate", "timestamp"],
@@ -31,7 +32,9 @@ def preprocess_1m():
 	ratings = ratings_df['rate'].astype(np.float32)
 	ratings.to_csv(default_1m_labels_path, header=None, index=None)
 	timestamp = ratings_df['timestamp']
+	#TODO 调整timestamp
 	timestamp.to_csv(default_1m_timestamp_path, header=None, index=None)
+
 	user_onehot_enc = OneHotEncoder()
 	user_mat = user_onehot_enc.fit_transform(
 		np.atleast_2d(ratings_df['user'].values).T).tocsr()

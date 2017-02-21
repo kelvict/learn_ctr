@@ -463,10 +463,11 @@ class RecIPNN(BaseModel):
         'kernel_l2': 0.001,
         'random_seed': 0,
         "init_path":None,
-        "p_mode":1
+        "p_mode":1,
+        "add_svd_score":False
     }
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, short_cuts=None, layer_l2=None, kernel_l2=None,
-                 init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None, p_mode=1):
+                 init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None, p_mode=1, add_svd_score=False):
         init_vars = []
         num_inputs = len(layer_sizes[0])
         factor_order = layer_sizes[1]
@@ -518,12 +519,15 @@ class RecIPNN(BaseModel):
             b1 = self.vars['b1']
 
             if p_mode == 0:
+                feat_emb_mat = tf.reshape(l, [-1, num_inputs, factor_order])
+                feat1_emb_mat = tf.slice(feat_emb_mat, [0, 0, 0], [-1, 1, factor_order])
+                feat2_emb_mat = tf.slice(feat_emb_mat, [0, 1, 0], [-1, 1, factor_order])
                 p = tf.reduce_sum(
                     tf.reshape(
                         tf.matmul(
                             tf.reshape(
                                 tf.transpose(
-                                    tf.reshape(l, [-1, num_inputs, factor_order]),
+                                    feat_emb_mat,
                                     [0, 2, 1]),
                                 [-1, num_inputs]),
                             k1),
@@ -532,10 +536,15 @@ class RecIPNN(BaseModel):
             elif p_mode == 1:
                 #slower inner product
                 feat_emb_mat = tf.reshape(l, [-1, num_inputs, factor_order])
+                feat1_emb_mat = tf.slice(feat_emb_mat, [0, 0, 0], [-1, 1, factor_order])
+                feat2_emb_mat = tf.slice(feat_emb_mat, [0, 1, 0], [-1, 1, factor_order])
                 feat_sim_vec = tf.reshape(tf.batch_matmul(
                     feat_emb_mat,tf.transpose(feat_emb_mat,[0,2,1])),[-1, num_inputs * num_inputs])
                 p = tf.matmul(feat_sim_vec,k1)
             else:
+                feat_emb_mat = tf.reshape(l, [-1, num_inputs, factor_order])
+                feat1_emb_mat = tf.slice(feat_emb_mat, [0, 0, 0], [-1, 1, factor_order])
+                feat2_emb_mat = tf.slice(feat_emb_mat, [0, 1, 0], [-1, 1, factor_order])
                 p = tf.reduce_sum(
                     tf.reshape(
                         tf.matmul(
@@ -547,6 +556,7 @@ class RecIPNN(BaseModel):
                             k1),
                         [-1, factor_order, layer_sizes[2]]),
                     1)
+            svd_score = tf.batch_matmul(feat1_emb_mat,tf.transpose(feat2_emb_mat,(0, 2, 1)))
             l = tf.nn.dropout(
                 train_util.activate(
                     tf.matmul(l, w1) + b1 + p,
@@ -569,7 +579,7 @@ class RecIPNN(BaseModel):
             for i in user_item_fields:
                 self.score_bias = tf.add(self.score_bias, tf.sparse_tensor_dense_matmul(self.X[i], self.vars['field_score_b_%d'%i]))
 
-            self.y_prob = tf.add(l, self.score_bias)
+            self.y_prob = tf.add(tf.add(l, self.score_bias), svd_score)
             self.loss = tf.sqrt(tf.reduce_mean(tf.square(self.y-self.y_prob)))
 
             if layer_l2 is not None:

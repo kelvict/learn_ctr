@@ -11,6 +11,7 @@ from util import log, train as train_util
 import util
 from sklearn.externals import joblib
 import gc
+import datetime
 
 def _apply_df(params):
     df = pd.DataFrame()
@@ -127,6 +128,13 @@ def split_sparse_data_by_field(data_pkl_path, field_sizes_path, dump_path):
     joblib.dump(fields, dump_path)
     log.log("Finish whole split")
     return fields
+
+def extract_datetime_info_from_time_stamp(timestamp):
+    dt = datetime.datetime.fromtimestamp(timestamp)
+    timedelta = datetime.datetime.now()-dt
+    days_delta = timedelta.days
+    return pd.Series([dt.year, dt.month, dt.day, dt.hour, dt.weekday(), dt.minute, days_delta],
+                     index=["year", "month", "day", "hour", "weekday", "minute", "days_delta"])
 
 def split_train_test_data(dataset_path, labels_path, trainset_rate, train_data_dump_path, test_data_dump_path):
     util.log.log("Loading trainset and labels")

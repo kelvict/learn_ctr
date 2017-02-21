@@ -1,1 +1,1 @@
-python criteo.py --ml --preprocess 1>ml1m_preprocess.log 2>&1
+python criteo.py --ml --preprocess 1>log/ml1m_preprocess.log 2>&1

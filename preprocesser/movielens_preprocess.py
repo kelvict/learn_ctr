@@ -37,7 +37,7 @@ def preprocess_1m():
 
 	time_info = timestamp.apply(preprocess_util.extract_datetime_info_from_time_stamp)
 	n_day_interval = 100 #365
-	n_days_delta_interval = 100 #1038
+	n_days_delta_interval = 1000 #1038
 	uniq_bins = np.unique(algos.quantile(time_info['day'], np.linspace(0,1,n_day_interval)))
 	time_info['day'] = pd.tools.tile._bins_to_cuts(time_info['day'],uniq_bins,include_lowest=True)
 	uniq_bins = np.unique(algos.quantile(time_info['days_delta'], np.linspace(0,1,n_days_delta_interval)))

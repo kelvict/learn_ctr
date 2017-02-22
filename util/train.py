@@ -138,7 +138,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
           batch_size=256, train_set_percent = 0.75,
           should_split_by_field=False, field_sizes_pkl_path=None,
           should_early_stop=True, early_stop_interval=10, should_dump_model=False,
-          model_dump_path="", shuffle_trainset=True, eval_interval=2, train_log_path="", ctr_or_recommend=True, **kwargs):
+          model_dump_path="", shuffle_trainset=True, eval_interval=2, train_log_path="", ctr_or_recommend=True, predict_batch_size=10000, **kwargs):
     util.log.log("Start to train model")
     util.log.log("Loading trainset and labels")
     if testset_csr_pkl_path is None:
@@ -204,9 +204,9 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
             losses = [loss]
         if ( i + 1 ) % eval_interval == 0:
             util.log.log("Evaluate in epoch %d"%i)
-            train_preds = predict(model, train_data, 10000)
+            train_preds = predict(model, train_data, predict_batch_size)
             util.log.log("Predict Test Set")
-            test_preds = predict(model, test_data, 10000)
+            test_preds = predict(model, test_data, predict_batch_size)
             util.log.log("Cal Evaluation")
             if ctr_or_recommend:
                 train_score = roc_auc_score(train_data[1], train_preds)
@@ -278,14 +278,10 @@ def predict(model, eval_data, batch_size=100000):
         X, y = util.train.slice(eval_data, j * batch_size,
                                 min(batch_size, inst_size - j * batch_size))
         #util.log.log("Sliced in iter %d"%(j))
-        preds.append(model.run(model.y_prob, X))
+        pred = model.run(model.y_prob, X)
+        preds.append(pred)
     util.log.log("Stack Prediction Result")
-    try:
-        preds = np.vstack(preds)
-    except ValueError,e:
-        print e
-        joblib.dump(preds,"log/ml1m_train_error_preds.log")
-        raise ValueError
+    preds = np.vstack(preds)
     return preds
 
 def init_var_map(init_vars, init_path=None):

@@ -557,6 +557,7 @@ class RecIPNN(BaseModel):
                         [-1, factor_order, layer_sizes[2]]),
                     1)
             svd_score = tf.batch_matmul(feat1_emb_mat,tf.transpose(feat2_emb_mat,(0, 2, 1)))
+            svd_score = tf.reshape(svd_score,[-1,1])
             print "svd_score: ",svd_score
             l = tf.nn.dropout(
                 train_util.activate(

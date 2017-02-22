@@ -557,6 +557,7 @@ class RecIPNN(BaseModel):
                         [-1, factor_order, layer_sizes[2]]),
                     1)
             svd_score = tf.batch_matmul(feat1_emb_mat,tf.transpose(feat2_emb_mat,(0, 2, 1)))
+            print "svd_score: ",svd_score
             l = tf.nn.dropout(
                 train_util.activate(
                     tf.matmul(l, w1) + b1 + p,
@@ -579,7 +580,11 @@ class RecIPNN(BaseModel):
             for i in user_item_fields:
                 self.score_bias = tf.add(self.score_bias, tf.sparse_tensor_dense_matmul(self.X[i], self.vars['field_score_b_%d'%i]))
 
-            self.y_prob = tf.add(tf.add(l, self.score_bias), svd_score)
+            if add_svd_score:
+                self.y_prob = tf.add(tf.add(l, self.score_bias), svd_score)
+            else:
+                self.y_prob = tf.add(l, self.score_bias)
+            print "y_prob: ", self.y_prob
             self.loss = tf.sqrt(tf.reduce_mean(tf.square(self.y-self.y_prob)))
 
             if layer_l2 is not None:

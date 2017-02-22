@@ -55,7 +55,7 @@ if __name__ == "__main__":
 				conf_paths = args.conf_path.split(";")
 				for conf_path in conf_paths:
 					print "Train with Conf path %s"%conf_path
-					criteo_train.train_model_with_conf(conf_path, ctr_or_recommend=False)
+					criteo_train.train_model_with_conf(conf_path, ctr_or_recommend=False,predict_batch_size=100000)
 	elif args.preprocess:
 		print args.input
 		from preprocesser import criteo_preprocesser

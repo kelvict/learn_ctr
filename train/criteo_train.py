@@ -29,7 +29,7 @@ def create_default_conf(dump_path, model_name=LR.__name__):
 			)
 	return None
 
-def train_model_with_conf(conf_path, ctr_or_recommend=True):
+def train_model_with_conf(conf_path, ctr_or_recommend=True, predict_batch_size=10000):
 	fi = open(conf_path)
 	conf = json.load(fi)
 	fi.close()

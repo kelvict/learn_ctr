@@ -12,6 +12,7 @@ log_format = '%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)
 date_format = '%Y-%m-%d %H:%M:%S'
 
 def config_log(log_path_prefix):
+    print "pid: %s"%str(os.getpid())
     print "Log to %s"%("%s.%s.log"%(log_path_prefix, time.strftime("%Y%m%d_%H%M%S")))
 
     logging.basicConfig(level=logging.DEBUG,

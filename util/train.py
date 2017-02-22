@@ -280,7 +280,12 @@ def predict(model, eval_data, batch_size=100000):
         #util.log.log("Sliced in iter %d"%(j))
         preds.append(model.run(model.y_prob, X))
     util.log.log("Stack Prediction Result")
-    preds = np.vstack(preds)
+    try:
+        preds = np.vstack(preds)
+    except ValueError,e:
+        print e
+        joblib.dump(preds,"log/ml1m_train_error_preds.log")
+        raise ValueError
     return preds
 
 def init_var_map(init_vars, init_path=None):

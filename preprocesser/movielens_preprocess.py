@@ -70,7 +70,7 @@ def preprocess_1m():
 		np.atleast_2d(lbl_enc.fit_transform(users_df['job'])).T)
 	zipcode_mat = onehot_enc.fit_transform(
 		np.atleast_2d(lbl_enc.fit_transform(users_df['zipcode'])).T)
-	uids = users_df['uid'].values.tolist()
+	uids = ratings_df['user'].values.tolist()
 	uids_to_idx = {}
 	for i in xrange(len(uids)):
 		uids_to_idx[uids[i]] = i
@@ -98,7 +98,7 @@ def preprocess_1m():
 	year_col = lbl_enc.fit_transform(movies_df['year'])
 	movie_year_mat = onehot_enc.fit_transform(np.atleast_2d(year_col).T)
 
-	mids = movies_df['mid'].values.tolist()
+	mids = ratings_df['item'].values.tolist()
 	mids_to_idx = {}
 	for i in xrange(len(mids)):
 		mids_to_idx[mids[i]] = i

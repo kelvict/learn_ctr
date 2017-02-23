@@ -38,7 +38,6 @@ if __name__ == "__main__":
 	parser.add_argument("--gpu", type=str, help="Set CUDA_VISIBLE_DEVICES", default="")
 	args = parser.parse_args()
 
-
 	if args.ml:
 		if args.preprocess:
 			from preprocesser import movielens_preprocess

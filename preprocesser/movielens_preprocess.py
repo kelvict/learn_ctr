@@ -6,11 +6,12 @@
 import pandas as pd
 import numpy as np
 import datetime
-from sklearn.preprocessing import OneHotEncoder, LabelEncoder
+from scipy.sparse import vstack
+from sklearn.preprocessing import OneHotEncoder, LabelEncoder, MultiLabelBinarizer
 from sklearn.externals import joblib
 import pandas.core.algorithms as algos
 from util import preprocess as preprocess_util
-
+from util.log import log
 default_1m_path = "dataset/recommend/ml-1m/"
 default_1m_rating_path = default_1m_path+"ratings.dat"
 default_1m_movies_path = default_1m_path+"movies.dat"
@@ -35,6 +36,7 @@ def preprocess_1m():
 	ratings.to_csv(default_1m_labels_path, header=None, index=None)
 	timestamp = ratings_df['timestamp']
 
+	#Handle time info
 	time_info = timestamp.apply(preprocess_util.extract_datetime_info_from_time_stamp)
 	n_day_interval = 100 #365
 	n_days_delta_interval = 1000 #1038
@@ -54,6 +56,60 @@ def preprocess_1m():
 
 	timestamp.to_csv(default_1m_timestamp_path, header=None, index=None)
 
+	#Handle User
+	users_df = pd.read_csv(default_1m_users_path,sep="::", header=None,
+	                       names=["uid", "gender", "age", "job", "zipcode"],
+	                       engine="python")
+	lbl_enc = LabelEncoder()
+	onehot_enc = OneHotEncoder()
+	gender_mat = onehot_enc.fit_transform(
+		np.atleast_2d(lbl_enc.fit_transform(users_df['gender'])).T)
+	age_mat = onehot_enc.fit_transform(
+		np.atleast_2d(lbl_enc.fit_transform(users_df['age'])).T)
+	job_mat = onehot_enc.fit_transform(
+		np.atleast_2d(lbl_enc.fit_transform(users_df['job'])).T)
+	zipcode_mat = onehot_enc.fit_transform(
+		np.atleast_2d(lbl_enc.fit_transform(users_df['zipcode'])).T)
+	uids = users_df['uid'].values.tolist()
+	uids_to_idx = {}
+	for i in xrange(len(uids)):
+		uids_to_idx[uids[i]] = i
+
+	gender_mat = vstack([gender_mat[uids_to_idx[uids[i]]] for i in xrange(len(uids))])
+	age_mat = vstack([age_mat[uids_to_idx[uids[i]]] for i in xrange(len(uids))])
+	job_mat = vstack([job_mat[uids_to_idx[uids[i]]] for i in xrange(len(uids))])
+	zipcode_mat = vstack([zipcode_mat[uids_to_idx[uids[i]]] for i in xrange(len(uids))])
+	user_mats = [gender_mat, age_mat, job_mat, zipcode_mat]
+	user_field_sizes = [gender_mat.shape[1], age_mat.shape[1], job_mat.shape[1]]
+	for mat in user_mats:
+		print mat.shape
+		log(str(mat.shape))
+	#Handle Movies
+	movies_df = pd.read_csv(default_1m_movies_path,sep="::", header=None,
+	                        names=["mid", "name&year", "types"],
+	                        engine="python")
+	movies_df["year"] = [str[-5:-1] for str in movies_df['name&year'].values]
+	movies_df["name"] = [str[:-7] for name in movies_df['name&year'].values]
+	types = [set(str.split('|')) for str in movies_df['types']]
+	mlb = MultiLabelBinarizer(sparse_output=True)
+	movie_type_mat = mlb.fit_transform(types)
+	lbl_enc = LabelEncoder()
+	onehot_enc = OneHotEncoder()
+	year_col = lbl_enc.fit_transform(movies_df['year'])
+	movie_year_mat = onehot_enc.fit_transform(np.atleast_2d(year_col).T)
+
+	mids = movies_df['mid'].values.tolist()
+	mids_to_idx = {}
+	for i in xrange(len(mids)):
+		mids_to_idx[mids[i]] = i
+	movie_type_mat = vstack([movie_type_mat[mids_to_idx[mids[i]]] for i in xrange(len(mids))])
+	movie_year_mat = vstack([movie_year_mat[mids_to_idx[mids[i]]] for i in xrange(len(mids))])
+	movie_mats = [movie_type_mat, movie_year_mat]
+	movie_field_sizes = [movie_type_mat.shape[1], movie_year_mat.shape[1]]
+	for mat in movie_mats:
+		print mat.shape
+		log(str(mat.shape))
+	#Encode User and item
 	user_onehot_enc = OneHotEncoder()
 	user_mat = user_onehot_enc.fit_transform(
 		np.atleast_2d(ratings_df['user'].values).T).tocsr()
@@ -79,5 +135,13 @@ def preprocess_1m():
 		0.9,
 		default_1m_user_item_train_data_path%"rate_time", default_1m_user_item_test_data_path%"rate_time")
 
+	field_sizes = field_sizes + user_field_sizes + movie_field_sizes
+	dataset = dataset + user_mats + movie_mats
+	joblib.dump(field_sizes, default_1m_user_item_field_sizes_path%"rate_time_user_movie")
+	joblib.dump(dataset, default_1m_user_item_csr_mats_path%"rate_time_user_movie")
+	preprocess_util.split_train_test_data(
+		default_1m_user_item_csr_mats_path%"rate_time_user_movie", default_1m_labels_path,
+		0.9,
+		default_1m_user_item_train_data_path%"rate_time_user_movie", default_1m_user_item_test_data_path%"rate_time_user_movie")
 if __name__ == "__main__":
 	pass

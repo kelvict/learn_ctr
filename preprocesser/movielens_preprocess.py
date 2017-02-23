@@ -80,7 +80,7 @@ def preprocess_1m():
 	job_mat = vstack([job_mat[uids_to_idx[uids[i]]] for i in xrange(len(uids))])
 	zipcode_mat = vstack([zipcode_mat[uids_to_idx[uids[i]]] for i in xrange(len(uids))])
 	user_mats = [gender_mat, age_mat, job_mat, zipcode_mat]
-	user_field_sizes = [gender_mat.shape[1], age_mat.shape[1], job_mat.shape[1]]
+	user_field_sizes = [gender_mat.shape[1], age_mat.shape[1], job_mat.shape[1], zipcode_mat.shape[1]]
 	for mat in user_mats:
 		print mat.shape
 		log(str(mat.shape))

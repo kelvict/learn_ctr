@@ -88,9 +88,9 @@ def preprocess_1m():
 	movies_df = pd.read_csv(default_1m_movies_path,sep="::", header=None,
 	                        names=["mid", "name&year", "types"],
 	                        engine="python")
-	movies_df["year"] = [str[-5:-1] for str in movies_df['name&year'].values]
-	movies_df["name"] = [str[:-7] for name in movies_df['name&year'].values]
-	types = [set(str.split('|')) for str in movies_df['types']]
+	movies_df["year"] = [string[-5:-1] for string in movies_df['name&year'].values]
+	movies_df["name"] = [string[:-7] for string in movies_df['name&year'].values]
+	types = [set(string.split('|')) for string in movies_df['types']]
 	mlb = MultiLabelBinarizer(sparse_output=True)
 	movie_type_mat = mlb.fit_transform(types)
 	lbl_enc = LabelEncoder()

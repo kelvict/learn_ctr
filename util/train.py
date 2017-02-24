@@ -174,6 +174,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
 
     history_infos = []
     history_test_auc = []
+    best_eval_score = -1
     for i in xrange(n_epoch):
         util.log.log("Train in epoch %d"%i)
         fetches = [model.optimizer, model.loss]
@@ -211,19 +212,23 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
             if ctr_or_recommend:
                 train_score = roc_auc_score(train_data[1], train_preds)
                 test_score = roc_auc_score(test_data[1], test_preds)
+                if best_eval_score == -1 or test_score < best_eval_score:
+                    best_eval_score = test_score
                 train_loss = log_loss(train_data[1], train_preds)
                 test_loss = log_loss(test_data[1], test_preds)
-                util.log.log("[%d]\tavg-loss:%f\ttrain-auc:%f\teval-auc:%f\ttrain-loss:%f\teval-loss:%f"
-                             %(i, np.mean(losses), train_score, test_score, train_loss, test_loss))
-                print "[%d]\tavg-loss:%f\ttrain-auc:%f\teval-auc:%f\ttrain-loss:%f\teval-loss:%f"\
-                      %(i, np.mean(losses), train_score, test_score, train_loss, test_loss)
+                util.log.log("[%d]\tavg-loss:%f\ttrain-auc:%f\teval-auc:%f\ttrain-loss:%f\teval-loss:%f\tmin-eval-auc:%f"
+                             %(i, np.mean(losses), train_score, test_score, train_loss, test_loss, best_eval_score))
+                print "[%d]\tavg-loss:%f\ttrain-auc:%f\teval-auc:%f\ttrain-loss:%f\teval-loss:%f\tmin-eval-auc:%f"\
+                      %(i, np.mean(losses), train_score, test_score, train_loss, test_loss, best_eval_score)
             else:
                 train_score = np.sqrt(mean_squared_error(train_data[1], train_preds))
                 test_score = np.sqrt(mean_squared_error(test_data[1], test_preds))
-                util.log.log("[%d]\tavg-loss:%f\ttrain-rmse:%f\teval-rmse:%f"
-                             %(i, np.mean(losses), train_score, test_score))
-                print "[%d]\tavg-loss:%f\ttrain-rmse:%f\teval-rmse:%f"\
-                      %(i, np.mean(losses), train_score, test_score)
+                if best_eval_score == -1 or test_score < best_eval_score:
+                    best_eval_score = test_score
+                util.log.log("[%d]\tavg-loss:%f\ttrain-rmse:%f\teval-rmse:%f\tmin-eval-rmse:%f"
+                             %(i, np.mean(losses), train_score, test_score, best_eval_score))
+                print "[%d]\tavg-loss:%f\ttrain-rmse:%f\teval-rmse:%f\tmin-eval-rmse:%f"\
+                      %(i, np.mean(losses), train_score, test_score, best_eval_score)
         else:
             if ctr_or_recommend:
                 train_score = -1

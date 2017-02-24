@@ -53,9 +53,14 @@ if __name__ == "__main__":
 				criteo_train.create_default_conf(args.conf_path, args.create_conf)
 			else:
 				conf_paths = args.conf_path.split(";")
+				grid_param_conf_path = None
+				if len(args.grid_param_conf) != 0:
+					grid_param_conf_path = args.grid_param_conf
 				for conf_path in conf_paths:
 					print "Train with Conf path %s"%conf_path
-					criteo_train.train_model_with_conf(conf_path, ctr_or_recommend=False,predict_batch_size=100000)
+					criteo_train.train_model_with_conf(
+						conf_path, grid_param_conf_path=grid_param_conf_path,
+						ctr_or_recommend=False,predict_batch_size=100000)
 	elif args.preprocess:
 		print args.input
 		from preprocesser import criteo_preprocesser

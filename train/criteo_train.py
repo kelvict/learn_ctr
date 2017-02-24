@@ -29,10 +29,19 @@ def create_default_conf(dump_path, model_name=LR.__name__):
 			)
 	return None
 
-def train_model_with_conf(conf_path, ctr_or_recommend=True, predict_batch_size=10000):
+def train_model_with_conf(conf_path, grid_param_conf_path=None, ctr_or_recommend=True, predict_batch_size=10000):
 	fi = open(conf_path)
 	conf = json.load(fi)
 	fi.close()
+	confs = []
+	if grid_param_conf_path is not None:
+		fi = open(grid_param_conf_path)
+		grid_param_conf = json.load(fi)
+		fi.close()
+		for key in grid_param_conf['model_params'].keys():
+
+	else:
+		confs = [conf]
 	util.log.config_log("./log/criteo_%s_"%(conf['model_name']))
 	util.log.log("Train with conf: %s"%conf_path)
 	for Model in CRITEO_MODELS:

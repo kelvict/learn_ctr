@@ -34,6 +34,7 @@ if __name__ == "__main__":
 	#Train Argument
 	parser.add_argument("--train", action="store_true", help="should train data with model")
 	parser.add_argument("--create_conf", type=str, help="create default config", default="")
+	parser.add_argument("--grid_param_conf", type=str, default="")
 	parser.add_argument("--conf_path", type=str, help="config path", default="")
 	parser.add_argument("--gpu", type=str, help="Set CUDA_VISIBLE_DEVICES", default="")
 	args = parser.parse_args()
@@ -76,6 +77,7 @@ if __name__ == "__main__":
 			for conf_path in conf_paths:
 				print "Train with Conf path %s"%conf_path
 				criteo_train.train_model_with_conf(conf_path)
+
 	elif args.split_field:
 		from util import preprocess, log
 		log.config_log("./log/split_%s_"%(args.input.replace('/', '_')))

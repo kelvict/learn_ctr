@@ -173,7 +173,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
             test_data = util.train.split_data_by_field(test_data,field_idxs)
 
     history_infos = []
-    history_test_auc = []
+    history_eval_scores = []
     best_eval_score = -1
     for i in xrange(n_epoch):
         util.log.log("Train in epoch %d"%i)
@@ -236,8 +236,8 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
                 train_loss = -1
                 test_loss = -1
             else:
-                train_score = -1
-                test_score = -1
+                train_score = 999
+                test_score = 999
         if ctr_or_recommend:
             history_infos.append({
                 "losses":losses,
@@ -254,10 +254,13 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
                 "train-rmse":train_score,
                 "test-rmse":test_score,
             })
-        history_test_auc.append(test_score)
-        best_test_auc_epoch = np.argmax(history_test_auc)
-        if should_early_stop and i - best_test_auc_epoch >= early_stop_interval and abs(history_test_auc[-1]-history_test_auc[best_test_auc_epoch]) < 1e-5:
-            print "Early stop\nbest iteration:\n[%d]\teval-auc: %f"%(best_test_auc_epoch, history_test_auc[best_test_auc_epoch])
+        history_eval_scores.append(test_score)
+        if ctr_or_recommend:
+            best_test_auc_epoch = np.argmax(history_eval_scores)
+        else:
+            best_test_auc_epoch = np.argmin(history_eval_scores)
+        if should_early_stop and i - best_test_auc_epoch >= early_stop_interval:
+            print "Early stop\nbest iteration:\n[%d]\teval-auc: %f"%(best_test_auc_epoch, history_eval_scores[best_test_auc_epoch])
             break
     if should_dump_model:
         model.dump(model_dump_path)

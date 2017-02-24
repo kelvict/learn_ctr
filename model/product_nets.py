@@ -463,11 +463,12 @@ class RecIPNN(BaseModel):
         'kernel_l2': 0.001,
         'random_seed': 0,
         "init_path":None,
+        "init_with_normal_one":True,
         "p_mode":1,
         "add_svd_score":False
     }
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, short_cuts=None, layer_l2=None, kernel_l2=None,
-                 init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None, p_mode=1, add_svd_score=False):
+                 init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None, p_mode=1, add_svd_score=False, init_with_normal_one=True):
         init_vars = []
         num_inputs = len(layer_sizes[0])
         factor_order = layer_sizes[1]
@@ -492,7 +493,8 @@ class RecIPNN(BaseModel):
         for i in range(2, len(layer_sizes) - 1):
             layer_input = layer_sizes[i]
             layer_output = layer_sizes[i + 1]
-            init_vars.append(('w%d' % i, [layer_input, layer_output], 'normal_one', dtype)) #critical modify tnormal_zero to normal_one
+            init_vars.append(('w%d' % i, [layer_input, layer_output],
+                              'normal_one' if init_with_normal_one else 'tnormal', dtype)) #critical modify tnormal_zero to normal_one
             init_vars.append(('b%d' % i, [layer_output], 'zero', dtype))
         self.graph = tf.Graph()
         with self.graph.as_default():

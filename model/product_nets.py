@@ -465,10 +465,12 @@ class RecIPNN(BaseModel):
         "init_path":None,
         "init_with_normal_one":True,
         "p_mode":1,
+        "drop_embedding_layer":False,
         "add_svd_score":False
     }
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, short_cuts=None, layer_l2=None, kernel_l2=None,
-                 init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None, p_mode=1, add_svd_score=False, init_with_normal_one=True):
+                 init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None,
+                 p_mode=1, add_svd_score=False, init_with_normal_one=True, drop_embedding_layer=False):
         init_vars = []
         num_inputs = len(layer_sizes[0])
         factor_order = layer_sizes[1]
@@ -561,9 +563,11 @@ class RecIPNN(BaseModel):
             svd_score = tf.batch_matmul(feat1_emb_mat,tf.transpose(feat2_emb_mat,(0, 2, 1)))
             svd_score = tf.reshape(svd_score,[-1,1])
             print "svd_score: ",svd_score
+            embed_layer = tf.matmul(l, w1) + b1 + p
+
             l = tf.nn.dropout(
                 train_util.activate(
-                    tf.matmul(l, w1) + b1 + p,
+                    embed_layer,
                     layer_acts[1]),
                 layer_keeps[1])
             layers.append(l)
@@ -584,7 +588,10 @@ class RecIPNN(BaseModel):
                 self.score_bias = tf.add(self.score_bias, tf.sparse_tensor_dense_matmul(self.X[i], self.vars['field_score_b_%d'%i]))
 
             if add_svd_score:
-                self.y_prob = tf.add(tf.add(l, self.score_bias), svd_score)
+                if drop_embedding_layer:
+                    self.y_prob = tf.add(self.score_bias, svd_score)
+                else:
+                    self.y_prob = tf.add(tf.add(l, self.score_bias), svd_score)
             else:
                 self.y_prob = tf.add(l, self.score_bias)
             print "y_prob: ", self.y_prob

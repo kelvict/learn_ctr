@@ -156,7 +156,9 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
         train_labels = labels[:train_set_size]
 
         test_labels = labels[train_set_size:]
-
+        if not ctr_or_recommend:
+            train_labels = np.clip(train_labels, 0.0, 5.0)
+            test_labels = np.clip(test_labels, 0.0, 5.0)
         train_data = (train_set, train_labels)
         test_data = (test_set, test_labels)
     else:

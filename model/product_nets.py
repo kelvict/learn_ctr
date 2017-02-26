@@ -600,12 +600,14 @@ class RecIPNN(BaseModel):
             if layer_l2 is not None:
                 for i in range(num_inputs):
                     self.loss += layer_l2[0] * tf.nn.l2_loss(w0[i])
-                for i in range(1, len(layer_sizes) - 1):
-                    wi = self.vars['w%d' % i]
-                    # bi = self.vars['b%d' % i]
-                    self.loss += layer_l2[i] * tf.nn.l2_loss(wi)
+                if not drop_embedding_layer:
+                    for i in range(1, len(layer_sizes) - 1):
+                        wi = self.vars['w%d' % i]
+                        # bi = self.vars['b%d' % i]
+                        self.loss += layer_l2[i] * tf.nn.l2_loss(wi)
             if kernel_l2 is not None:
-                self.loss += kernel_l2 * tf.nn.l2_loss(k1)
+                if not drop_embedding_layer:
+                    self.loss += kernel_l2 * tf.nn.l2_loss(k1)
             self.optimizer = train_util.get_optimizer(opt_algo, learning_rate, self.loss)
 
             config = tf.ConfigProto()

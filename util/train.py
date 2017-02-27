@@ -138,7 +138,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
           batch_size=256, train_set_percent = 0.75,
           should_split_by_field=False, field_sizes_pkl_path=None,
           should_early_stop=True, early_stop_interval=10, should_dump_model=False,
-          model_dump_path="", shuffle_trainset=True, eval_interval=2, train_log_path="", ctr_or_recommend=True, predict_batch_size=10000, **kwargs):
+          model_dump_path="", shuffle_trainset=True, eval_interval=1, train_log_path="", ctr_or_recommend=True, predict_batch_size=10000, **kwargs):
     util.log.log("Start to train model")
     util.log.log("Loading trainset and labels")
     if testset_csr_pkl_path is None:

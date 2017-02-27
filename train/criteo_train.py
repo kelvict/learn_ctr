@@ -11,13 +11,13 @@ import util
 import time
 import copy
 
-from model.product_nets import LR, FM, FNN, CCPM, PNN1, PNN2, RecIPNN
+from model.product_nets import LR, FM, FNN, CCPM, PNN1, PNN2, RecIPNN, biasedMF
 
 
-CRITEO_MODELS = [LR, FM, FNN, CCPM, PNN1, PNN2, RecIPNN]
-SPLIT_BY_FIELD_MODELS = [FNN, CCPM, PNN1, PNN2, RecIPNN]
+CRITEO_MODELS = [LR, FM, FNN, CCPM, PNN1, PNN2, RecIPNN, biasedMF]
+SPLIT_BY_FIELD_MODELS = [FNN, CCPM, PNN1, PNN2, RecIPNN, biasedMF]
 CTR_MODELS = [LR, FM, FNN, CCPM, PNN1, PNN2]
-REC_MODELS = [RecIPNN]
+REC_MODELS = [RecIPNN, biasedMF]
 def create_default_conf(dump_path, model_name=LR.__name__):
 	for Model in CRITEO_MODELS:
 		if model_name == Model.__name__:

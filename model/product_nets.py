@@ -560,6 +560,8 @@ class RecIPNN(BaseModel):
                             k1),
                         [-1, factor_order, layer_sizes[2]]),
                     1)
+            #TODO
+            svd_score = tf.reduce_sum(tf.mul(tf.reshape(feat1_emb_mat,[-1,factor_order]), tf.reshape(feat2_emb_mat,[-1,factor_order])), 1)
             svd_score = tf.batch_matmul(feat1_emb_mat,tf.transpose(feat2_emb_mat,(0, 2, 1)))
             svd_score = tf.reshape(svd_score,[-1,1])
             print "svd_score: ",svd_score
@@ -595,8 +597,10 @@ class RecIPNN(BaseModel):
             else:
                 self.y_prob = tf.add(l, self.score_bias)
             print "y_prob: ", self.y_prob
-            self.loss = tf.sqrt(tf.reduce_mean(tf.square(self.y-self.y_prob)))
-
+            #self.loss = tf.reduce_mean(tf.square(self.y-self.y_prob))
+            #TODO to test down side one is bes
+            #Problem is in the learning rate!!!
+            self.loss = (tf.nn.l2_loss(tf.sub(self.y,self.y_prob))/500.0)
             if layer_l2 is not None:
                 for i in range(num_inputs):
                     self.loss += layer_l2[0] * tf.nn.l2_loss(w0[i])
@@ -631,6 +635,74 @@ class RecIPNN(BaseModel):
         pkl.dump(var_map, open(model_path, 'wb'))
         print 'model dumped at', model_path
 
+class biasedMF(BaseModel):
+    default_params = {
+        'layer_sizes':[[1,1]],
+        'embd_size':50,
+        'opt_algo': 'gd',
+        'reg_rate':0.025,
+        'learning_rate': 0.03,
+        'random_seed': 0,
+        "init_path": ""
+    }
+    def __init__(self, layer_sizes, embd_size=50, opt_algo="gd", reg_rate=0.05, learning_rate=0.03, random_seed=0, init_path=None):
+        feature_sizes = layer_sizes[0]
+        init_vars = []
+        init_vars.append(('b0', [feature_sizes[0],1], 'zero', dtype)) #zero no problem?
+        init_vars.append(('b1', [feature_sizes[1],1], 'zero', dtype))
+        init_vars.append(('bg', [1,1], 'zero', dtype))
+        init_vars.append(('w0', [feature_sizes[0], embd_size], 'tnormal', dtype))
+        init_vars.append(('w1', [feature_sizes[1], embd_size], 'tnormal', dtype))
+
+        self.graph = tf.Graph()
+        with self.graph.as_default():
+            self.X = [tf.sparse_placeholder(dtype), tf.sparse_placeholder(dtype)]
+            self.y = tf.placeholder(dtype)
+            self.vars = train_util.init_var_map(init_vars, init_path=init_path)
+
+            w0 = self.vars['w0']
+            w1 = self.vars['w1']
+            b0 = self.vars['b0']
+            b1 = self.vars['b1']
+            bg = self.vars['bg']
+            embd0 = tf.sparse_tensor_dense_matmul(self.X[0], w0)
+            embd1 = tf.sparse_tensor_dense_matmul(self.X[1], w1)
+            bias0 = tf.sparse_tensor_dense_matmul(self.X[0], b0)
+            bias1 = tf.sparse_tensor_dense_matmul(self.X[1], b1)
+            self.y_prob = tf.reshape(tf.reduce_sum(tf.mul(embd0, embd1), 1), [-1, 1])
+            print self.y_prob
+            self.y_prob = tf.add(self.y_prob, bg)
+            print self.y_prob
+            self.y_prob = tf.add(self.y_prob, bias0)
+            print self.y_prob
+            self.y_prob = tf.add(self.y_prob, bias1)
+            print self.y_prob
+            regularizer = tf.add(tf.nn.l2_loss(embd0), tf.nn.l2_loss(embd1), name='svd_regularizer')
+            self.loss = tf.sqrt(tf.nn.l2_loss(tf.subtract(self.y_prob, self.y)))
+            penalty = tf.constant(reg_rate, dtype=tf.float32, shape=[], name="l2")
+            self.loss = tf.add(self.loss, tf.mul(regularizer,penalty))
+            self.optimizer = train_util.get_optimizer(opt_algo, learning_rate, self.loss)
+
+            config = tf.ConfigProto()
+            config.gpu_options.allow_growth = True
+            self.sess = tf.Session(config=config)
+            tf.global_variables_initializer().run(session=self.sess)
+
+    def run(self, fetches, X=None, y=None):
+        feed_dict = {}
+        if X is not None:
+            for i in range(len(X)):
+                feed_dict[self.X[i]] = X[i]
+        if y is not None:
+            feed_dict[self.y] = y
+        return self.sess.run(fetches, feed_dict)
+
+    def dump(self, model_path):
+        var_map = {}
+        for name, var in self.vars.iteritems():
+            var_map[name] = self.run(var)
+        pkl.dump(var_map, open(model_path, 'wb'))
+        print 'model dumped at', model_path
 
 class PNN2(BaseModel):
     default_params = {

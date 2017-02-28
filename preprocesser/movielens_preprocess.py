@@ -11,7 +11,11 @@ from sklearn.preprocessing import OneHotEncoder, LabelEncoder, MultiLabelBinariz
 from sklearn.externals import joblib
 import pandas.core.algorithms as algos
 from util import preprocess as preprocess_util
-from util.log import log
+from util.log import log, now_str
+
+import gc
+import copy
+
 default_1m_path = "dataset/recommend/ml-1m/"
 default_1m_rating_path = default_1m_path+"ratings.dat"
 default_1m_movies_path = default_1m_path+"movies.dat"
@@ -19,6 +23,7 @@ default_1m_users_path = default_1m_path+"users.dat"
 
 default_1m_labels_path = default_1m_path+"labels.csv"
 default_1m_timestamp_path = default_1m_path+"timestamp.csv"
+default_1m_pre_rates_path = default_1m_path+"pre_rates.pkl"
 default_1m_timeinfo_dummies_path = default_1m_path + "timeinfo_mats.pkl"
 default_1m_user_item_field_sizes_path = default_1m_path+"%s_field_sizes.pkl"
 default_1m_user_item_csr_mats_path = default_1m_path+"%s_csr_mats.pkl"
@@ -26,15 +31,55 @@ default_1m_user_item_csr_mats_path = default_1m_path+"%s_csr_mats.pkl"
 default_1m_user_item_train_data_path = default_1m_path+"%s_train_data.pkl"
 default_1m_user_item_test_data_path = default_1m_path+"%s_test_data.pkl"
 
-def preprocess_1m():
+def get_pre_rate(ratings_df):
+	ratings_df.sort_values(['user','timestamp'], inplace=True)
+	ratings_df.reset_index(inplace=True)
+	pre_rate = []
+	for i in xrange(5):
+		pre_rate.append([[]])
+	for i in xrange(1,ratings_df.shape[0]):
+		if i%10000==1:
+			print now_str(), " make rating list ", i
+		if ratings_df['user'][i-1] != ratings_df['user'][i]:
+			for j in xrange(len(pre_rate)):
+				pre_rate[j].append([])
+		else:
+			for j in xrange(len(pre_rate)):
+				pre_rate[j].append(copy.copy(pre_rate[j][i-1]))
+				if ratings_df['rate'][i-1] == j+1:
+					pre_rate[j][i].append(ratings_df['item'][i-1])
+	return pre_rate
+
+def make_dataframe_with_pre_rate(pre_rate,cnt_limit=20):
+	for i in xrange(len(pre_rate)):
+		for j in xrange(len(pre_rate[i])):
+			pre_rate[i][j] = set(pre_rate[i][j][-cnt_limit:])
+	return pd.DataFrame(pre_rate,index=["Rate_%d"%(i+1) for i in range(len(pre_rate))]).T
+
+def preprocess_1m(random_seed=None):
 	ratings_df = pd.read_csv(default_1m_rating_path,sep="::", header=None,
 	                      names=["user", "item", "rate", "timestamp"],
 	                      engine="python")
+	#ratings_df = ratings_df.iloc[:3000,:]
+	if random_seed is not None:
+		np.random.seed(random_seed)
+	#Handle Prev Rate
+	pre_rate = get_pre_rate(ratings_df)
+	joblib.dump(pre_rate, default_1m_pre_rates_path)
+	pre_rate_df = make_dataframe_with_pre_rate(pre_rate,cnt_limit=20)
+	del pre_rate
+	gc.collect()
+
+	ratings_df = pd.concat([ratings_df, pre_rate_df], axis=1)
+
+	#Shuffle
 	ratings_df = ratings_df.iloc[np.random.permutation(len(ratings_df))].reset_index(drop=True)
+
 	print ratings_df.shape
 	ratings = ratings_df['rate'].astype(np.float32)
 	ratings.to_csv(default_1m_labels_path, header=None, index=None)
 	timestamp = ratings_df['timestamp']
+
 
 	#Handle time info
 	time_info = timestamp.apply(preprocess_util.extract_datetime_info_from_time_stamp)
@@ -110,6 +155,14 @@ def preprocess_1m():
 	for mat in movie_mats:
 		print mat.shape
 		log(str(mat.shape))
+
+	#Encode Prev Rates
+	pre_rate_mats = []
+	for i in xrange(5):
+		mlb = MultiLabelBinarizer(sparse_output=True)
+		pre_rate_mats.append(mlb.fit_transform(ratings_df["Rate_%d"%(i+1)].values))
+	pre_rate_field_sizes = [mat.shape[1] for mat in pre_rate_mats]
+
 	#Encode User and item
 	user_onehot_enc = OneHotEncoder()
 	user_mat = user_onehot_enc.fit_transform(
@@ -144,5 +197,15 @@ def preprocess_1m():
 		default_1m_user_item_csr_mats_path%"rate_time_user_movie", default_1m_labels_path,
 		0.9,
 		default_1m_user_item_train_data_path%"rate_time_user_movie", default_1m_user_item_test_data_path%"rate_time_user_movie")
+
+	field_sizes = field_sizes + pre_rate_field_sizes
+	dataset = dataset + pre_rate_mats
+	joblib.dump(field_sizes, default_1m_user_item_field_sizes_path%"rate_time_user_movie_pre_rate")
+	joblib.dump(dataset, default_1m_user_item_csr_mats_path%"rate_time_user_movie_pre_rate")
+	preprocess_util.split_train_test_data(
+		default_1m_user_item_csr_mats_path%"rate_time_user_movie_pre_rate", default_1m_labels_path,
+		0.9,
+		default_1m_user_item_train_data_path%"rate_time_user_movie_pre_rate", default_1m_user_item_test_data_path%"rate_time_user_movie_pre_rate")
+
 if __name__ == "__main__":
-	pass
+	preprocess_1m()

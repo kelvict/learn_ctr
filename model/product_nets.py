@@ -5,7 +5,7 @@ import tensorflow as tf
 from util import train as train_util
 from base_model import BaseModel
 dtype = train_util.DTYPE
-
+import math
 
 class LR(BaseModel):
     default_params = {
@@ -466,11 +466,14 @@ class RecIPNN(BaseModel):
         "init_with_normal_one":True,
         "p_mode":1,
         "drop_embedding_layer":False,
-        "add_svd_score":False
+        "add_svd_score":False,
+        "add_u_auto_rec":False,
+        "add_i_auto_rec":False
     }
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, short_cuts=None, layer_l2=None, kernel_l2=None,
                  init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None,
-                 p_mode=1, add_svd_score=False, init_with_normal_one=True, drop_embedding_layer=False):
+                 p_mode=1, add_svd_score=False, init_with_normal_one=True, drop_embedding_layer=False,
+                 add_u_auto_rec=False, add_i_auto_rec=False):
         init_vars = []
         num_inputs = len(layer_sizes[0])
         factor_order = layer_sizes[1]
@@ -498,6 +501,24 @@ class RecIPNN(BaseModel):
             init_vars.append(('w%d' % i, [layer_input, layer_output],
                               'normal_one' if init_with_normal_one else 'tnormal', dtype)) #critical modify tnormal_zero to normal_one
             init_vars.append(('b%d' % i, [layer_output], 'zero', dtype))
+
+        #AutoRec
+        user_cnt = layer_sizes[0][0]
+        item_cnt = layer_sizes[0][1]
+        if add_u_auto_rec:
+            scale = math.sqrt(6.0 / (user_cnt + layer_sizes[1]))
+            WU0 = tf.Variable(tf.random_uniform([user_cnt, layer_sizes[1]], -scale, scale))
+            bU0 = tf.Variable(tf.random_uniform([layer_sizes[1]], -scale, scale))
+            WU1 = tf.Variable(tf.random_uniform([layer_sizes[1], user_cnt], -scale, scale))
+            bU = tf.Variable(tf.random_uniform([user_cnt], -scale, scale))
+        if add_i_auto_rec:
+            scale = math.sqrt(6.0 / (item_cnt + layer_sizes[1]))
+            WI0 = tf.Variable(tf.random_uniform([item_cnt, layer_sizes[1]], -scale, scale))
+            bI0 = tf.Variable(tf.random_uniform([layer_sizes[1]], -scale, scale))
+            WI1 = tf.Variable(tf.random_uniform([layer_sizes[1], item_cnt], -scale, scale))
+            bI = tf.Variable(tf.random_uniform([item_cnt], -scale, scale))
+
+
         self.graph = tf.Graph()
         with self.graph.as_default():
             layers = []

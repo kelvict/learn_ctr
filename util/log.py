@@ -29,5 +29,8 @@ def config_log(log_path_prefix):
 def log(msg):
     logging.info(str(msg))
 
+def now_str():
+    return time.strftime("%Y%m%d_%H%M%S")
+
 def pretty_print_json_obj(obj):
     logging.info(json.dumps(obj, indent=4))

@@ -468,12 +468,13 @@ class RecIPNN(BaseModel):
         "drop_embedding_layer":False,
         "add_svd_score":False,
         "add_u_auto_rec":False,
-        "add_i_auto_rec":False
+        "add_i_auto_rec":False,
+        "prev_item_vec_cnt":0
     }
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, short_cuts=None, layer_l2=None, kernel_l2=None,
                  init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None,
                  p_mode=1, add_svd_score=False, init_with_normal_one=True, drop_embedding_layer=False,
-                 add_u_auto_rec=False, add_i_auto_rec=False):
+                 add_u_auto_rec=False, add_i_auto_rec=False, prev_item_vec_cnt=0):
         init_vars = []
         num_inputs = len(layer_sizes[0])
         factor_order = layer_sizes[1]
@@ -530,11 +531,18 @@ class RecIPNN(BaseModel):
             self.vars = train_util.init_var_map(init_vars, init_path)
             w0 = [self.vars['w0_%d' % i] for i in range(num_inputs)]
             b0 = [self.vars['b0_%d' % i] for i in range(num_inputs)]
+            #transform to embedding
+            if prev_item_vec_cnt == 0:
+                embd_vecs = [tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) + b0[i]
+                            for i in range(num_inputs)]
+            else:
+                embd_vecs = [tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) + b0[i]
+                            for i in range(num_inputs-prev_item_vec_cnt)]
+                embd_vecs.extend([tf.div(tf.sparse_tensor_dense_matmul(self.X[i], w0[i]),
+                                         tf.reshape(tf.sparse_reduce_sum(self.X[i],1),(-1,1))) for i in range(num_inputs)[-prev_item_vec_cnt:]])
             l = tf.nn.dropout(
                 train_util.activate(
-                    tf.concat(1, [
-                        tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) + b0[i] #transform to embedding
-                        for i in range(num_inputs)]),
+                    tf.concat(1, embd_vecs),
                     layer_acts[0]),
                 layer_keeps[0])
             layers.append(l)
@@ -582,7 +590,7 @@ class RecIPNN(BaseModel):
                         [-1, factor_order, layer_sizes[2]]),
                     1)
             #TODO
-            svd_score = tf.reduce_sum(tf.mul(tf.reshape(feat1_emb_mat,[-1,factor_order]), tf.reshape(feat2_emb_mat,[-1,factor_order])), 1)
+            #svd_score = tf.reduce_sum(tf.mul(tf.reshape(feat1_emb_mat,[-1,factor_order]), tf.reshape(feat2_emb_mat,[-1,factor_order])), 1)
             svd_score = tf.batch_matmul(feat1_emb_mat,tf.transpose(feat2_emb_mat,(0, 2, 1)))
             svd_score = tf.reshape(svd_score,[-1,1])
             print "svd_score: ",svd_score

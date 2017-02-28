@@ -597,7 +597,7 @@ class RecIPNN(BaseModel):
             else:
                 self.y_prob = tf.add(l, self.score_bias)
             print "y_prob: ", self.y_prob
-            self.loss = tf.reduce_mean(tf.square(tf.sub(self.y,self.y_prob)))
+            self.loss = tf.sqrt(tf.reduce_mean(tf.square(tf.sub(self.y,self.y_prob))))
             #TODO to test down side one is bes
             #Problem is in the learning rate!!!
             #self.loss = (tf.nn.l2_loss(tf.sub(self.y,self.y_prob))/500.0)

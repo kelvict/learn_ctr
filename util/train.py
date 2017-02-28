@@ -348,16 +348,19 @@ def activate(weights, activation_function):
 
 
 def get_optimizer(opt_algo, learning_rate, loss):
+    #There are bugs in nadam & radam
+    """
+    elif opt_algo == 'nadam':
+        return NadamOptimizer(learning_rate).minimize(loss)
+    elif opt_algo == 'radam':
+        return RadamOptimizer(learning_rate).minimize(loss)
+    """
     if opt_algo == 'adaldeta':
         return tf.train.AdadeltaOptimizer(learning_rate).minimize(loss)
     elif opt_algo == 'adagrad':
         return tf.train.AdagradOptimizer(learning_rate).minimize(loss)
     elif opt_algo == 'adam':
         return tf.train.AdamOptimizer(learning_rate).minimize(loss)
-    elif opt_algo == 'nadam':
-        return NadamOptimizer(learning_rate).minimize(loss)
-    elif opt_algo == 'radam':
-        return RadamOptimizer(learning_rate).minimize(loss)
     elif opt_algo == 'ftrl':
         return tf.train.FtrlOptimizer(learning_rate).minimize(loss)
     elif opt_algo == 'gd':

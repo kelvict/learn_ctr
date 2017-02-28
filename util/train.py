@@ -15,7 +15,7 @@ from sklearn.utils import shuffle as sklearn_shuffle
 
 import pandas as pd
 import util
-
+from util.optimizer import RadamOptimizer, NadamOptimizer
 import json
 import gc
 
@@ -354,6 +354,10 @@ def get_optimizer(opt_algo, learning_rate, loss):
         return tf.train.AdagradOptimizer(learning_rate).minimize(loss)
     elif opt_algo == 'adam':
         return tf.train.AdamOptimizer(learning_rate).minimize(loss)
+    elif opt_algo == 'nadam':
+        return NadamOptimizer(learning_rate).minimize(loss)
+    elif opt_algo == 'radam':
+        return RadamOptimizer(learning_rate).minimize(loss)
     elif opt_algo == 'ftrl':
         return tf.train.FtrlOptimizer(learning_rate).minimize(loss)
     elif opt_algo == 'gd':

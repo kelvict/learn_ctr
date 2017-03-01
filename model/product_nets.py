@@ -539,7 +539,8 @@ class RecIPNN(BaseModel):
                 embd_vecs = [tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) + b0[i]
                             for i in range(num_inputs-prev_item_vec_cnt)]
                 embd_vecs.extend([tf.div(tf.sparse_tensor_dense_matmul(self.X[i], w0[i]),
-                                         tf.reshape(tf.sparse_reduce_sum(self.X[i],1),(-1,1))) for i in range(num_inputs)[-prev_item_vec_cnt:]])
+                                         tf.clip_by_value(tf.reshape(tf.sparse_reduce_sum(self.X[i],1),(-1,1)), 1.0, 99999.0))
+                                  for i in range(num_inputs)[-prev_item_vec_cnt:]])
             l = tf.nn.dropout(
                 train_util.activate(
                     tf.concat(1, embd_vecs),

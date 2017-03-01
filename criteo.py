@@ -8,6 +8,7 @@ if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
 	#Handle Different Dataset
 	parser.add_argument("--ml", action="store_true", help="do movie_lens action")
+	parser.add_argument("--make_multi_dataset", action="store_true", help="make multi dataset")
 	#Preprocess Argument
 	parser.add_argument("-p", "--preprocess", action="store_true", help="should preprocess data")
 	parser.add_argument("-i", "--input", type=str, help="set input data path")
@@ -42,7 +43,15 @@ if __name__ == "__main__":
 	if args.ml:
 		if args.preprocess:
 			from preprocesser import movielens_preprocess
-			movielens_preprocess.preprocess_1m()
+			if args.make_multi_dataset:
+				random_seeds = [0, 1, 2, 3, 4]
+				trainset_rates = [0.1 * i for i in range(1,10)]
+				for random_seed in random_seeds:
+					for trainset_rate in trainset_rates:
+						movielens_preprocess.preprocess_1m(
+							random_seed=random_seed, trainset_rate=trainset_rate)
+			else:
+				movielens_preprocess.preprocess_1m(output_suffix=None)
 		elif args.train:
 			import os
 			if len(args.gpu) != 0:

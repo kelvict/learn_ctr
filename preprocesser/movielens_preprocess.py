@@ -56,30 +56,37 @@ def make_dataframe_with_pre_rate(pre_rate,cnt_limit=20):
 			pre_rate[i][j] = set(pre_rate[i][j][-cnt_limit:])
 	return pd.DataFrame(pre_rate,index=["Rate_%d"%(i+1) for i in range(len(pre_rate))]).T
 
-def preprocess_1m(random_seed=None):
+def preprocess_1m(random_seed=None, trainset_rate=0.9, output_suffix=""):
+	if output_suffix is None:
+		output_suffix = ""
+	elif len(output_suffix) != 0:
+		output_suffix = "."+output_suffix+"."+str(random_seed)+"_"+str(trainset_rate)
+	else:
+		output_suffix = "."+str(random_seed)+"_"+str(trainset_rate)
+
 	ratings_df = pd.read_csv(default_1m_rating_path,sep="::", header=None,
 	                      names=["user", "item", "rate", "timestamp"],
 	                      engine="python")
 	#ratings_df = ratings_df.iloc[:3000,:]
-	if random_seed is not None:
-		np.random.seed(random_seed)
+
 	#Handle Prev Rate
 	pre_rate = get_pre_rate(ratings_df)
-	joblib.dump(pre_rate, default_1m_pre_rates_path)
+	joblib.dump(pre_rate, default_1m_pre_rates_path+output_suffix)
 	pre_rate_df = make_dataframe_with_pre_rate(pre_rate,cnt_limit=20)
 	del pre_rate
 	gc.collect()
 
 	ratings_df = pd.concat([ratings_df, pre_rate_df], axis=1)
 
+	if random_seed is not None:
+		np.random.seed(random_seed)
 	#Shuffle
 	ratings_df = ratings_df.iloc[np.random.permutation(len(ratings_df))].reset_index(drop=True)
 
 	print ratings_df.shape
 	ratings = ratings_df['rate'].astype(np.float32)
-	ratings.to_csv(default_1m_labels_path, header=None, index=None)
+	ratings.to_csv(default_1m_labels_path+output_suffix, header=None, index=None)
 	timestamp = ratings_df['timestamp']
-
 
 	#Handle time info
 	time_info = timestamp.apply(preprocess_util.extract_datetime_info_from_time_stamp)
@@ -173,39 +180,39 @@ def preprocess_1m(random_seed=None):
 
 	field_sizes = [user_mat.shape[1], item_mat.shape[1]]
 	dataset = [user_mat, item_mat]
-	joblib.dump(field_sizes, default_1m_user_item_field_sizes_path%"rate")
-	joblib.dump(dataset, default_1m_user_item_csr_mats_path%"rate")
+	joblib.dump(field_sizes, default_1m_user_item_field_sizes_path%"rate"+output_suffix)
+	joblib.dump(dataset, default_1m_user_item_csr_mats_path%"rate"+output_suffix)
 	preprocess_util.split_train_test_data(
-		default_1m_user_item_csr_mats_path%"rate", default_1m_labels_path,
-		0.9,
-		default_1m_user_item_train_data_path%"rate", default_1m_user_item_test_data_path%"rate")
+		default_1m_user_item_csr_mats_path%"rate"+output_suffix, default_1m_labels_path+output_suffix,
+		trainset_rate,
+		default_1m_user_item_train_data_path%"rate"+output_suffix, default_1m_user_item_test_data_path%"rate"+output_suffix)
 
 	field_sizes = field_sizes + time_info_field_sizes
 	dataset = dataset + time_info_mats
-	joblib.dump(field_sizes, default_1m_user_item_field_sizes_path%"rate_time")
-	joblib.dump(dataset, default_1m_user_item_csr_mats_path%"rate_time")
+	joblib.dump(field_sizes, default_1m_user_item_field_sizes_path%"rate_time"+output_suffix)
+	joblib.dump(dataset, default_1m_user_item_csr_mats_path%"rate_time"+output_suffix)
 	preprocess_util.split_train_test_data(
-		default_1m_user_item_csr_mats_path%"rate_time", default_1m_labels_path,
-		0.9,
-		default_1m_user_item_train_data_path%"rate_time", default_1m_user_item_test_data_path%"rate_time")
+		default_1m_user_item_csr_mats_path%"rate_time"+output_suffix, default_1m_labels_path+output_suffix,
+		trainset_rate,
+		default_1m_user_item_train_data_path%"rate_time"+output_suffix, default_1m_user_item_test_data_path%"rate_time"+output_suffix)
 
 	field_sizes = field_sizes + user_field_sizes + movie_field_sizes
 	dataset = dataset + user_mats + movie_mats
-	joblib.dump(field_sizes, default_1m_user_item_field_sizes_path%"rate_time_user_movie")
-	joblib.dump(dataset, default_1m_user_item_csr_mats_path%"rate_time_user_movie")
+	joblib.dump(field_sizes, default_1m_user_item_field_sizes_path%"rate_time_user_movie"+output_suffix)
+	joblib.dump(dataset, default_1m_user_item_csr_mats_path%"rate_time_user_movie"+output_suffix)
 	preprocess_util.split_train_test_data(
-		default_1m_user_item_csr_mats_path%"rate_time_user_movie", default_1m_labels_path,
-		0.9,
-		default_1m_user_item_train_data_path%"rate_time_user_movie", default_1m_user_item_test_data_path%"rate_time_user_movie")
+		default_1m_user_item_csr_mats_path%"rate_time_user_movie"+output_suffix, default_1m_labels_path+output_suffix,
+		trainset_rate,
+		default_1m_user_item_train_data_path%"rate_time_user_movie"+output_suffix, default_1m_user_item_test_data_path%"rate_time_user_movie"+output_suffix)
 
 	field_sizes = field_sizes + pre_rate_field_sizes
 	dataset = dataset + pre_rate_mats
-	joblib.dump(field_sizes, default_1m_user_item_field_sizes_path%"rate_time_user_movie_pre_rate")
-	joblib.dump(dataset, default_1m_user_item_csr_mats_path%"rate_time_user_movie_pre_rate")
+	joblib.dump(field_sizes, default_1m_user_item_field_sizes_path%"rate_time_user_movie_pre_rate"+output_suffix)
+	joblib.dump(dataset, default_1m_user_item_csr_mats_path%"rate_time_user_movie_pre_rate"+output_suffix)
 	preprocess_util.split_train_test_data(
-		default_1m_user_item_csr_mats_path%"rate_time_user_movie_pre_rate", default_1m_labels_path,
-		0.9,
-		default_1m_user_item_train_data_path%"rate_time_user_movie_pre_rate", default_1m_user_item_test_data_path%"rate_time_user_movie_pre_rate")
+		default_1m_user_item_csr_mats_path%"rate_time_user_movie_pre_rate"+output_suffix, default_1m_labels_path+output_suffix,
+		trainset_rate,
+		default_1m_user_item_train_data_path%"rate_time_user_movie_pre_rate"+output_suffix, default_1m_user_item_test_data_path%"rate_time_user_movie_pre_rate"+output_suffix)
 
 if __name__ == "__main__":
 	preprocess_1m()

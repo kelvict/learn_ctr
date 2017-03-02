@@ -57,7 +57,30 @@ def dfs_make_confs(conf, depth, grid_param_conf, confs):
 		conf['model_params'][cur_key] = param
 		dfs_make_confs(conf, depth+1,grid_param_conf, confs)
 
-def train_model_with_conf(conf_path, grid_param_conf_path=None, ctr_or_recommend=True, predict_batch_size=10000):
+def modify_conf_with_params(conf, params):
+	if 'lr' in params:
+		conf['model_params']['learning_rate'] = params['lr']
+	if 'n_embd' in params:
+		conf['model_params']['layer_sizes'][1] = params['n_embd']
+	if 'width' in params:
+		for i in range(2, len(conf['model_params']['layer_sizes'])-1):
+			conf['model_params']['layer_sizes'][i] = params['width']
+	if 'act' in params:
+		for i in range(2, len(conf['model_params']['layer_sizes'])-1):
+			conf['model_params']['layer_acts'][i] = params['act'] if params['act'] != "null" else None
+	if 'reg' in params:
+		for i in xrange(len(conf['model_params']['layer_l2'])):
+			conf['model_params']['layer_l2'][i] = params['reg']
+		conf['model_params']['kernel_l2'] = params['reg']
+	if 'dropout' in params:
+		for i in xrange(len(conf['model_params']['layer_keeps'])):
+			conf['model_params']['layer_keeps'][i] = params['dropout']
+	if 'data_suffix' in params:
+		path_names = ['trainset_csr_pkl_path', 'testset_csr_pkl_path', 'field_sizes_pkl_path']
+		for name in path_names:
+			conf[name] += params['data_suffix']
+
+def train_model_with_conf(conf_path, grid_param_conf_path=None, ctr_or_recommend=True, predict_batch_size=10000, params=None):
 	fi = open(conf_path)
 	conf = json.load(fi)
 	fi.close()
@@ -70,7 +93,9 @@ def train_model_with_conf(conf_path, grid_param_conf_path=None, ctr_or_recommend
 	else:
 		confs = [conf]
 	for conf in confs:
-		util.log.config_log("./log/criteo_%s_"%(conf['model_name']))
+		if params is not None:
+			modify_conf_with_params(conf, params)
+		time_str = util.log.config_log("./log/criteo_%s_"%(conf['model_name']))
 		util.log.log("Train with conf: %s"%conf_path)
 		for Model in CRITEO_MODELS:
 			if conf['model_name'] == Model.__name__:
@@ -85,7 +110,7 @@ def train_model_with_conf(conf_path, grid_param_conf_path=None, ctr_or_recommend
 
 				util.train.train(model,
 								 should_split_by_field=Model in SPLIT_BY_FIELD_MODELS,
-								 train_log_path="./log/criteo_%s_.%s.log.json"%(conf['model_name'], time.strftime("%Y%m%d_%H%M%S")),
+								 train_log_path="./log/criteo_%s_.%s.log.json"%(conf['model_name'], time_str),
 								 ctr_or_recommend=ctr_or_recommend,
 								 **conf)
 				if conf['should_dump_model']:

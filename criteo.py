@@ -9,6 +9,15 @@ if __name__ == "__main__":
 	#Handle Different Dataset
 	parser.add_argument("--ml", action="store_true", help="do movie_lens action")
 	parser.add_argument("--make_multi_dataset", action="store_true", help="make multi dataset")
+	#param
+	parser.add_argument("--params", action="store_true", help="params input")
+	parser.add_argument("--n_embd", type=int, help="embedding size")
+	parser.add_argument("--width", type=int)
+	parser.add_argument("--act", type=str)
+	parser.add_argument("--reg", type=float)
+	parser.add_argument("--lr", type=float)
+	parser.add_argument("--dropout", type=float)
+	parser.add_argument("--data_suffix", type=str)
 	#Preprocess Argument
 	parser.add_argument("-p", "--preprocess", action="store_true", help="should preprocess data")
 	parser.add_argument("-i", "--input", type=str, help="set input data path")
@@ -40,6 +49,24 @@ if __name__ == "__main__":
 	parser.add_argument("--gpu", type=str, help="Set CUDA_VISIBLE_DEVICES", default="")
 	args = parser.parse_args()
 
+	params = None
+	if args.params:
+		params = {}
+		if args.n_embd:
+			params["n_embd"] = args.n_embd
+		if args.width:
+			params["width"] = args.width
+		if args.act:
+			params["act"] = args.act
+		if args.lr:
+			params["lr"] = args.lr
+		if args.reg:
+			params["reg"] = args.reg
+		if args.dropout:
+			params["dropout"] = args.dropout
+		if args.data_suffix:
+			params["data_suffix"] = args.data_suffix
+
 	if args.ml:
 		if args.preprocess:
 			from preprocesser import movielens_preprocess
@@ -69,7 +96,7 @@ if __name__ == "__main__":
 					print "Train with Conf path %s"%conf_path
 					criteo_train.train_model_with_conf(
 						conf_path, grid_param_conf_path=grid_param_conf_path,
-						ctr_or_recommend=False,predict_batch_size=100000)
+						ctr_or_recommend=False, predict_batch_size=100000, params=params)
 	elif args.preprocess:
 		print args.input
 		from preprocesser import criteo_preprocesser
@@ -90,7 +117,7 @@ if __name__ == "__main__":
 			conf_paths = args.conf_path.split(";")
 			for conf_path in conf_paths:
 				print "Train with Conf path %s"%conf_path
-				criteo_train.train_model_with_conf(conf_path)
+				criteo_train.train_model_with_conf(conf_path, params=params)
 
 	elif args.split_field:
 		from util import preprocess, log

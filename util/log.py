@@ -12,13 +12,13 @@ log_format = '%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)
 date_format = '%Y-%m-%d %H:%M:%S'
 
 def config_log(log_path_prefix):
-
-    print "Log to %s"%("%s.%s.log"%(log_path_prefix, time.strftime("%Y%m%d_%H%M%S")))
+    time_str = time.strftime("%Y%m%d_%H%M%S")
+    print "Log to %s"%("%s.%s.log"%(log_path_prefix, time_str))
 
     logging.basicConfig(level=logging.DEBUG,
                 format= log_format,
                 datefmt=date_format,
-                filename="%s.%s.log"%(log_path_prefix, time.strftime("%Y%m%d_%H%M%S")),
+                filename="%s.%s.log"%(log_path_prefix, time_str),
                 filemode='w')
     console = logging.StreamHandler()
     console.setLevel(logging.INFO)
@@ -26,6 +26,7 @@ def config_log(log_path_prefix):
     logger = logging.getLogger(log_path_prefix)
     logger.addHandler(console)
     log("pid: %s"%str(os.getpid()))
+    return time_str
 def log(msg):
     logging.info(str(msg))
 

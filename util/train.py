@@ -269,8 +269,18 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
     if len(train_log_path) != 0:
         json_log = {
             "conf": kwargs,
-            "eval_log": history_infos
+            "eval_log": history_infos,
+            "best_eval_score":best_eval_score
         }
+        param_str = ""
+        param_str += "."+"_".join([str(l) for l in kwargs['model_params']['layer_sizes'][1:]])
+        param_str += "."+kwargs['model_params']['layer_acts'][2]
+        param_str += "."+str(kwargs['model_params']['learning_rate'])
+        param_str += "."+str(kwargs['model_params']['kernel_l2'])
+        param_str += "."+str(trainset_csr_pkl_path.split('/')[2])
+        if not trainset_csr_pkl_path.endswith(".pkl"):
+            param_str += "."+trainset_csr_pkl_path[-5]
+        train_log_path += param_str
         fo = open(train_log_path, "w")
         json.dump(json_log, fo, indent=True, default=util.json_util.json_numpy_serialzer)
         fo.close()

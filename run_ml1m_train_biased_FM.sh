@@ -8,7 +8,7 @@ for conf_id in 1; do
 						python criteo.py --ml --train  --gpu 1 \
 						--conf_path ./conf/biased_MF_rate_${conf_id}.conf \
 						--params --width ${width} --lr ${lr} --n_embd ${n_embd} --reg ${reg}\
-						--data_suffix ${random_seed}_${trainset_rate} \
+						--data_suffix .${random_seed}_${trainset_rate} \
 						1>log/ml1m_train_rate_real_biased_MF_${conf_id}.log 2>&1
 						sleep 2s
 					done

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-for conf_id in 51; do
+for conf_id in 50; do
 	for lr in 0.0001; do
 		for random_seed in `seq 0 4`; do
 			for trainset_rate in 0.9; do

@@ -61,18 +61,24 @@ def modify_conf_with_params(conf, params):
 	if 'lr' in params:
 		conf['model_params']['learning_rate'] = params['lr']
 	if 'n_embd' in params:
-		conf['model_params']['layer_sizes'][1] = params['n_embd']
-	if 'width' in params:
+		if conf['model_name'] == 'biasedMF':
+			conf['model_params']['embd_size'] = params['n_embd']
+		else:
+			conf['model_params']['layer_sizes'][1] = params['n_embd']
+	if 'width' in params and conf['model_name'] != 'biasedMF':
 		for i in range(2, len(conf['model_params']['layer_sizes'])-1):
 			conf['model_params']['layer_sizes'][i] = params['width']
-	if 'act' in params:
+	if 'act' in params and conf['model_name'] != 'biasedMF':
 		for i in range(2, len(conf['model_params']['layer_sizes'])-1):
 			conf['model_params']['layer_acts'][i] = params['act'] if params['act'] != "null" else None
 	if 'reg' in params:
-		for i in xrange(len(conf['model_params']['layer_l2'])):
-			conf['model_params']['layer_l2'][i] = params['reg']
-		conf['model_params']['kernel_l2'] = params['reg']
-	if 'dropout' in params:
+		if conf['model_name'] != 'biasedMF':
+			for i in xrange(len(conf['model_params']['layer_l2'])):
+				conf['model_params']['layer_l2'][i] = params['reg']
+			conf['model_params']['kernel_l2'] = params['reg']
+		else:
+			conf['model_params']['reg_rate'] = params['reg']
+	if 'dropout' in params and conf['model_name'] != 'biasedMF':
 		for i in xrange(len(conf['model_params']['layer_keeps'])):
 			conf['model_params']['layer_keeps'][i] = params['dropout']
 	if 'data_suffix' in params:

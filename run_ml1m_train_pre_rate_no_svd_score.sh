@@ -10,7 +10,7 @@ for conf_id in 41; do
 							--conf_path ./conf/RecIPNN_rate_time_user_movie_pre_rate_no_svd_score_${conf_id}.conf \
 							--params --width ${width} --lr ${lr} --n_embd ${n_embd} --reg ${reg}\
 							--data_suffix ${random_seed}_${trainset_rate} \
-							1>log/ml1m_train_rate_time_user_movie_pre_rate_no_svd_score_${conf_id}.log 2>&1&
+							1>log/ml1m_train_rate_time_user_movie_pre_rate_no_svd_score_${conf_id}.log 2>&1
 							sleep 2s
 						done
 					done

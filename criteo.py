@@ -44,8 +44,8 @@ if __name__ == "__main__":
 		if args.preprocess:
 			from preprocesser import movielens_preprocess
 			if args.make_multi_dataset:
-				random_seeds = [0, 1, 2, 3, 4]
-				trainset_rates = [0.1 * i for i in range(1,10)]
+				random_seeds = [4]
+				trainset_rates = [0.1 * i for i in range(3,10)]
 				for random_seed in random_seeds:
 					for trainset_rate in trainset_rates:
 						movielens_preprocess.preprocess_1m(

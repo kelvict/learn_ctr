@@ -275,12 +275,12 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
 
         param_str = ""
         if kwargs['model_name'] == "biasedMF":
-            param_str += "."+kwargs['model_params']['embd_size']
+            param_str += "."+str(kwargs['model_params']['embd_size'])
             param_str += "."+str(kwargs['model_params']['learning_rate']).replace('.','p')
             param_str += "."+str(kwargs['model_params']['reg_rate']).replace('.','p')
         else:
             param_str += "."+"_".join([str(l) for l in kwargs['model_params']['layer_sizes'][1:]])
-            param_str += "."+kwargs['model_params']['layer_acts'][2]
+            param_str += "."+str(kwargs['model_params']['layer_acts'][2])
             param_str += "."+str(kwargs['model_params']['learning_rate']).replace('.','p')
             param_str += "."+str(kwargs['model_params']['kernel_l2']).replace('.','p')
 
@@ -290,9 +290,9 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
         else:
             param_str += "."+str(len(field_sizes))
         if not trainset_csr_pkl_path.endswith(".pkl"):
-            param_str += "."+trainset_csr_pkl_path[-5].replace('.','p')
+            param_str += "."+trainset_csr_pkl_path[-5:].replace('.','p')
         train_log_path += param_str
-        train_log_path += "."+str(best_eval_score)
+        train_log_path += "."+str(best_eval_score).replace('.','p')
         fo = open(train_log_path, "w")
         json.dump(json_log, fo, indent=True, default=util.json_util.json_numpy_serialzer)
         fo.close()

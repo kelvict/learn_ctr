@@ -79,7 +79,7 @@ def modify_conf_with_params(conf, params):
 		else:
 			conf['model_params']['reg_rate'] = params['reg']
 	if 'dropout' in params and conf['model_name'] != 'biasedMF':
-		for i in xrange(len(conf['model_params']['layer_keeps'])):
+		for i in range(1,len(conf['model_params']['layer_keeps'])):
 			conf['model_params']['layer_keeps'][i] = params['dropout']
 	if 'data_suffix' in params:
 		path_names = ['trainset_csr_pkl_path', 'testset_csr_pkl_path', 'field_sizes_pkl_path']

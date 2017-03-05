@@ -6,7 +6,7 @@ for conf_id in 41 42 43 44; do
 				for width in 5 10; do
 					for n_embd in 75; do
 						for reg in 0.002; do
-							python criteo.py --ml --train  --gpu 0 \
+							python criteo.py --ml --train  --gpu 1 \
 							--conf_path ./conf/RecIPNN_rate_time_user_movie_pre_rate_no_svd_score_${conf_id}.conf \
 							--params --width ${width} --lr ${lr} --n_embd ${n_embd} --reg ${reg}\
 							--data_suffix .${random_seed}_${trainset_rate} \

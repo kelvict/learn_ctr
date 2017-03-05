@@ -177,6 +177,8 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
     history_infos = []
     history_eval_scores = []
     best_eval_score = -1
+    train_score = 999
+    test_score = 999
     for i in xrange(n_epoch):
         util.log.log("Train in epoch %d"%i)
         fetches = [model.optimizer, model.loss]
@@ -238,8 +240,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
                 train_loss = -1
                 test_loss = -1
             else:
-                train_score = 999
-                test_score = 999
+                pass
         if ctr_or_recommend:
             history_infos.append({
                 "losses":losses,
@@ -293,6 +294,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
             param_str += "."+trainset_csr_pkl_path[-5:].replace('.','p')
         train_log_path += param_str
         train_log_path += "."+str(best_eval_score).replace('.','p')
+        train_log_path += "."+str(test_score).replace('.','p')
         fo = open(train_log_path, "w")
         json.dump(json_log, fo, indent=True, default=util.json_util.json_numpy_serialzer)
         fo.close()

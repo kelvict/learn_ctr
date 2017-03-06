@@ -137,7 +137,7 @@ def split_data_by_field(data, field_offsets):
 def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_path=None, n_epoch=5,
           batch_size=256, train_set_percent = 0.75,
           should_split_by_field=False, field_sizes_pkl_path=None,
-          should_early_stop=True, early_stop_interval=10, should_dump_model=False,
+          should_early_stop=True, early_stop_interval=10, batch_eval_interval=100, should_dump_model=False,
           model_dump_path="", shuffle_trainset=True, eval_interval=1, train_log_path="", ctr_or_recommend=True, predict_batch_size=10000, **kwargs):
     util.log.log("Start to train model")
     util.log.log("Loading trainset and labels")
@@ -179,6 +179,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
     best_eval_score = -1
     train_score = 999
     test_score = 999
+    best_batch_eval_score = -1
     for i in xrange(n_epoch):
         util.log.log("Train in epoch %d"%i)
         fetches = [model.optimizer, model.loss]
@@ -202,6 +203,34 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
                                         min(batch_size,
                                             inst_size - idx * batch_size))
                 _, loss = model.run(fetches, X, y)
+                if batch_eval_interval > 0 and j%batch_eval_interval == batch_eval_interval/2:
+                    train_preds = predict(model, train_data, predict_batch_size)
+                    test_preds = predict(model, test_data, predict_batch_size)
+                    if ctr_or_recommend:
+                        train_score = roc_auc_score(train_data[1], train_preds)
+                        test_score = roc_auc_score(test_data[1], test_preds)
+                        if best_eval_score == -1 or test_score < best_eval_score:
+                            best_eval_score = test_score
+                        train_loss = log_loss(train_data[1], train_preds)
+                        test_loss = log_loss(test_data[1], test_preds)
+                        util.log.log("[%d-%d]\tavg-loss:%f\ttrain-auc:%f\teval-auc:%f\ttrain-loss:%f\teval-loss:%f\tmin-eval-auc:%f"
+                                     %(i, j, np.mean(losses), train_score, test_score, train_loss, test_loss, best_eval_score))
+                        print "[%d-%d]\tavg-loss:%f\ttrain-auc:%f\teval-auc:%f\ttrain-loss:%f\teval-loss:%f\tmin-eval-auc:%f"\
+                              %(i, j, np.mean(losses), train_score, test_score, train_loss, test_loss, best_eval_score)
+                        if best_batch_eval_score == -1 or test_score > best_batch_eval_score:
+                            best_batch_eval_score = test_score
+                    else:
+                        train_score = np.sqrt(mean_squared_error(train_data[1], train_preds))
+                        test_score = np.sqrt(mean_squared_error(test_data[1], test_preds))
+                        if best_eval_score == -1 or test_score < best_eval_score:
+                            best_eval_score = test_score
+                        util.log.log("[%d-%d]\tavg-loss:%f\ttrain-rmse:%f\teval-rmse:%f\tmin-eval-rmse:%f"
+                                     %(i, j, np.mean(losses), train_score, test_score, best_eval_score))
+                        print "[%d-%d]\tavg-loss:%f\ttrain-rmse:%f\teval-rmse:%f\tmin-eval-rmse:%f"\
+                              %(i, j, np.mean(losses), train_score, test_score, best_eval_score)
+                        if best_batch_eval_score == -1 or test_score < best_batch_eval_score:
+                            best_batch_eval_score = test_score
+
                 losses.append(loss)
         elif batch_size == -1:
             X, y = util.train.slice(train_data)
@@ -284,6 +313,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
             param_str += "."+str(kwargs['model_params']['layer_acts'][2])
             param_str += "."+str(kwargs['model_params']['learning_rate']).replace('.','p')
             param_str += "."+str(kwargs['model_params']['kernel_l2']).replace('.','p')
+            param_str += "."+str(kwargs['model_params']['layer_keeps']).replace('.','p')
 
         param_str += "."+str(trainset_csr_pkl_path.split('/')[2])
         if field_sizes is None:

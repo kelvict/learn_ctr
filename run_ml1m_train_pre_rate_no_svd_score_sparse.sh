@@ -2,8 +2,8 @@
 for conf_id in 42; do
 	for lr in 0.0002; do
 		for random_seed in `seq 0 5`; do
-			for trainset_rate in 0.9; do
-				for width in 5 3; do
+			for trainset_rate in 0.9 0.1; do
+				for width in 5; do
 					for n_embd in 75; do
 						for reg in 0.001; do
 							python criteo.py --ml --train  --gpu 0 \

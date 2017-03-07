@@ -138,7 +138,8 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
           batch_size=256, train_set_percent = 0.75,
           should_split_by_field=False, field_sizes_pkl_path=None,
           should_early_stop=True, early_stop_interval=10, batch_eval_interval=50, should_dump_model=False,
-          model_dump_path="", shuffle_trainset=True, eval_interval=1, train_log_path="", ctr_or_recommend=True, predict_batch_size=10000, **kwargs):
+          model_dump_path="", shuffle_trainset=True, eval_interval=1, train_log_path="", ctr_or_recommend=True,
+          predict_batch_size=10000, min_rec_pred=1, max_rec_pred=5,**kwargs):
     util.log.log("Start to train model")
     util.log.log("Loading trainset and labels")
     if testset_csr_pkl_path is None:
@@ -157,8 +158,8 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
 
         test_labels = labels[train_set_size:]
         if not ctr_or_recommend:
-            train_labels = np.clip(train_labels, 0.0, 5.0)
-            test_labels = np.clip(test_labels, 0.0, 5.0)
+            train_labels = np.clip(train_labels, min_rec_pred, max_rec_pred)
+            test_labels = np.clip(test_labels, min_rec_pred, max_rec_pred)
         train_data = (train_set, train_labels)
         test_data = (test_set, test_labels)
     else:
@@ -218,6 +219,8 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
                         print "[%d-%d]\tavg-loss:%f\ttrain-auc:%f\teval-auc:%f\ttrain-loss:%f\teval-loss:%f\tmin-eval-auc:%f"\
                               %(i, j, np.mean(losses), train_score, test_score, train_loss, test_loss, best_batch_eval_score)
                     else:
+                        train_preds = np.clip(train_preds, min_rec_pred, max_rec_pred)
+                        test_preds = np.clip(test_preds, min_rec_pred, max_rec_pred)
                         train_score = np.sqrt(mean_squared_error(train_data[1], train_preds))
                         test_score = np.sqrt(mean_squared_error(test_data[1], test_preds))
                         if best_batch_eval_score == -1 or test_score < best_batch_eval_score:
@@ -250,6 +253,8 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
                 print "[%d]\tavg-loss:%f\ttrain-auc:%f\teval-auc:%f\ttrain-loss:%f\teval-loss:%f\tmin-eval-auc:%f"\
                       %(i, np.mean(losses), train_score, test_score, train_loss, test_loss, best_eval_score)
             else:
+                train_preds = np.clip(train_preds, min_rec_pred, max_rec_pred)
+                test_preds = np.clip(test_preds, min_rec_pred, max_rec_pred)
                 train_score = np.sqrt(mean_squared_error(train_data[1], train_preds))
                 test_score = np.sqrt(mean_squared_error(test_data[1], test_preds))
                 if best_eval_score == -1 or test_score < best_eval_score:

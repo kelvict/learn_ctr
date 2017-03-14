@@ -72,6 +72,8 @@ if __name__ == "__main__":
 			params["data_suffix"] = args.data_suffix
 	if args.yelp:
 		if args.preprocess:
+			from util import log
+			log.config_log("./log/yelp_preprocess_log.log")
 			from preprocesser import yelp_preprocess
 			if args.make_multi_dataset:
 				random_seeds = [0, 1, 2, 3, 4]

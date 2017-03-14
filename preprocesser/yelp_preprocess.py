@@ -13,6 +13,8 @@ prefix = "dataset/recommend/yelp/"
 academic_dataset_json_prefix = "yelp_academic_dataset_%s.json"
 from util.log import log_and_print
 import random
+import gc
+
 def build_df(objs, keys):
 	df_dict = {}
 	for key in keys:
@@ -116,7 +118,8 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 	review_keys.remove("text")
 	review_keys.remove("review_id")
 	reviews_df = build_df(reviews, keys=review_keys)
-
+	del reviews
+	gc.collect()
 	log_and_print("Shuffle Reviews")
 	#Shuffle
 	if random_seed is not None:
@@ -151,7 +154,9 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 		review_mats.append(
 			preproc.get_csr_mat_from_exclusive_field(review_time_info_df[key])
 		)
-
+	del reviews_df
+	del review_time_info_df
+	gc.collect()
 	#Handle
 	user_keys = [u'yelping_since', u'useful', u'compliment_photos',
 	             u'compliment_list', u'compliment_funny', u'funny',
@@ -166,6 +171,7 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 		user_keys.remove("friends")
 	log_and_print("Build User df")
 	users_df = build_df(users, keys= user_keys)
+	del users
 	users_df.set_index(users_df['user_id'])
 	user_mats = []
 
@@ -208,6 +214,10 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 
 	uids = users_df['user_id'].values.tolist()
 
+	del users_df
+	del yelp_time_info_df
+	gc.collect()
+
 	log_and_print("Join Expand User Mats")
 	uids_to_idx = {}
 	for i in xrange(len(uids)):
@@ -224,10 +234,11 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 	business_keys.remove("type")
 	business_keys.remove("address")
 	business_keys.remove("hours")
-
 	business_keys.remove("attributes")
 	log_and_print("Build businesses_df")
 	businesses_df = build_df(businesses, keys=business_keys)
+	del businesses
+	gc.collect()
 	businesses_df.set_index(businesses_df['business_id'])
 
 	log_and_print("get_business_attr_value_df")
@@ -252,6 +263,11 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 	business_mats.append(preproc.get_csr_mat_from_contin_field(business_attr_df['latitude'], n_interval=200))
 	business_mats.append(preproc.get_csr_mat_from_contin_field(business_attr_df['review_count'], n_interval=30))
 	bids = businesses_df['business_id'].values.tolist()
+
+	del businesses_df
+	del business_attr_df
+	gc.collect()
+
 	log_and_print("Join Expand Business")
 	bids_to_idx = {}
 	for i in xrange(len(bids)):

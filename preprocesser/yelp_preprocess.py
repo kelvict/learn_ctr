@@ -63,7 +63,7 @@ def get_business_attr_value_df(businesses):
 	for key in key_to_option.keys():
 		business_attr_dict[key] = []
 	for b in businesses:
-		unhandled_keys = key_to_option.keys().tolist()
+		unhandled_keys = key_to_option.keys()
 		if "attributes" in b and b['attributes'] is not None:
 			for attr in b['attributes']:
 				name = attr[:attr.find(": ")]

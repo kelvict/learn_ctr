@@ -35,7 +35,7 @@ def log_and_print(msg):
     time_str = time.strftime("%Y%m%d_%H%M%S")
     print "[%s] %s"%(time_str, msg)
     sys.stdout.flush()
-    
+
 def now_str():
     return time.strftime("%Y%m%d_%H%M%S")
 

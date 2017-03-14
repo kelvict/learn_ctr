@@ -237,12 +237,12 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 	business_keys.remove("attributes")
 	log_and_print("Build businesses_df")
 	businesses_df = build_df(businesses, keys=business_keys)
-	del businesses
-	gc.collect()
 	businesses_df.set_index(businesses_df['business_id'])
 
 	log_and_print("get_business_attr_value_df")
 	business_attr_df = get_business_attr_value_df(businesses)
+	del businesses
+	gc.collect()
 	business_attr_df.set_index(businesses_df['business_id'])
 
 	business_mats = []

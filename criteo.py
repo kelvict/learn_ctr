@@ -7,8 +7,12 @@ import argparse
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
 	#Handle Different Dataset
+	#MovieLens
 	parser.add_argument("--ml", action="store_true", help="do movie_lens action")
 	parser.add_argument("--make_multi_dataset", action="store_true", help="make multi dataset")
+	#Yelp
+	parser.add_argument("--yelp", action="store_true")
+	parser.add_argument("--n_friend", type=int,default=100)
 	#param
 	parser.add_argument("--params", action="store_true", help="params input")
 	parser.add_argument("--n_embd", type=int, help="embedding size")
@@ -66,7 +70,37 @@ if __name__ == "__main__":
 			params["dropout"] = args.dropout
 		if args.data_suffix:
 			params["data_suffix"] = args.data_suffix
+	if args.yelp:
+		if args.preprocess:
+			from preprocesser import yelp_preprocess
+			if args.make_multi_dataset:
+				random_seeds = [0, 1, 2, 3, 4]
+				trainset_rates = [0.1 * i for i in range(1,10)]
+				for random_seed in random_seeds:
+					for trainset_rate in trainset_rates:
+						yelp_preprocess.preprocess(random_seed, trainset_rate, args.test, args.n_friend)
+			else:
+				random_seed = 0
+				trainset_rate = 0.9
+				yelp_preprocess.preprocess(random_seed, trainset_rate, args.test, args.n_friend)
+		elif args.train:
+			import os
+			if len(args.gpu) != 0:
+				os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
 
+			from train import criteo_train
+			if len(args.create_conf) != 0:
+				criteo_train.create_default_conf(args.conf_path, args.create_conf)
+			else:
+				conf_paths = args.conf_path.split(";")
+				grid_param_conf_path = None
+				if len(args.grid_param_conf) != 0:
+					grid_param_conf_path = args.grid_param_conf
+				for conf_path in conf_paths:
+					print "Train with Conf path %s"%conf_path
+					criteo_train.train_model_with_conf(
+						conf_path, grid_param_conf_path=grid_param_conf_path,
+						ctr_or_recommend=False, predict_batch_size=10000, params=params)
 	if args.ml:
 		if args.preprocess:
 			from preprocesser import movielens_preprocess

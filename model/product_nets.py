@@ -532,14 +532,15 @@ class RecIPNN(BaseModel):
             w0 = [self.vars['w0_%d' % i] for i in range(num_inputs)]
             b0 = [self.vars['b0_%d' % i] for i in range(num_inputs)]
             #transform to embedding
-            if prev_item_vec_cnt == 0:
-                embd_vecs = [tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) + b0[i]
-                            for i in range(num_inputs)]
-            else:
-                embd_vecs = [tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) + b0[i]
+            embd_vecs = [tf.div(tf.sparse_tensor_dense_matmul(self.X[i], w0[i]),
+                                    tf.clip_by_value(tf.reshape(tf.sparse_reduce_sum(self.X[i],1),(-1,1)), 1.0, 999999.0))
+                             + b0[i]
                             for i in range(num_inputs-prev_item_vec_cnt)]
+            #embd_vecs = [tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) + b0[i] for i in range(num_inputs-prev_item_vec_cnt)]
+            if prev_item_vec_cnt != 0:
                 embd_vecs.extend([tf.div(tf.sparse_tensor_dense_matmul(self.X[i], w0[i]),
-                                         tf.clip_by_value(tf.reshape(tf.sparse_reduce_sum(self.X[i],1),(-1,1)), 1.0, 99999.0))
+                                         tf.clip_by_value(tf.reshape(tf.sparse_reduce_sum(self.X[i],1),(-1,1)), 1.0, 999999.0)
+                                         + b0[i])
                                   for i in range(num_inputs)[-prev_item_vec_cnt:]])
             l = tf.nn.dropout(
                 train_util.activate(

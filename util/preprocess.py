@@ -12,6 +12,30 @@ import util
 from sklearn.externals import joblib
 import gc
 import datetime
+import time
+from sklearn.preprocessing import OneHotEncoder, LabelEncoder, MultiLabelBinarizer
+from scipy.sparse import vstack
+import pandas.core.algorithms as algos
+
+def get_csr_mat_from_exclusive_field(col):
+    lbl_enc = LabelEncoder()
+    onehot_enc = OneHotEncoder()
+    return onehot_enc.fit_transform(np.atleast_2d(lbl_enc.fit_transform(col)).T)
+
+def get_csr_mat_from_multiple_field(col):
+    mlb = MultiLabelBinarizer(sparse_output=True)
+    return mlb.fit_transform(col)
+
+def get_csr_mat_from_contin_field(col, n_interval=10, uniq_bins=None,estimate_interval_size=None):
+    if estimate_interval_size is not None:
+        n_interval = (col.max() - col.min()) / float(estimate_interval_size)
+    if uniq_bins is None:
+        uniq_bins = np.unique(algos.quantile(col, np.linspace(0, 1, n_interval)))
+	col = pd.tools.tile._bins_to_cuts(col, uniq_bins, include_lowest=True)
+    return get_csr_mat_from_exclusive_field(col)
+
+def join_expand(csr_mat, ids, ids_to_idx):
+    return vstack([csr_mat[ids_to_idx[ids[i]]] for i in xrange(len(ids))])
 
 def _apply_df(params):
     df = pd.DataFrame()
@@ -82,6 +106,9 @@ def join_files(filenames, output_path, sep = " "):
     except IOError,e:
         log.log("IOError")
 
+def get_field_sizes(csr_mats):
+    return [mat.shape[1] for mat in csr_mats]
+
 def get_field_sizes_from_one_hot_encoders(one_hot_encoders):
     field_sizes = []
     for i in xrange(len(one_hot_encoders)):
@@ -135,6 +162,14 @@ def extract_datetime_info_from_time_stamp(timestamp):
     days_delta = timedelta.days
     return pd.Series([dt.year, dt.month, dt.day, dt.hour, dt.weekday(), dt.minute, days_delta],
                      index=["year", "month", "day", "hour", "weekday", "minute", "days_delta"])
+
+def extract_date_info_from_str(string):
+    date_format = "%Y-%m-%d"
+    dt = datetime.datetime.fromtimestamp(time.mktime(time.strptime(string, date_format)))
+    timedelta = datetime.datetime.now()-dt
+    days_delta = timedelta.days
+    return pd.Series([dt.year, dt.month, dt.day, dt.weekday(), days_delta],
+                     index=["year", "month", "day", "weekday", "days_delta"])
 
 def split_train_test_data(dataset_path, labels_path, trainset_rate, train_data_dump_path, test_data_dump_path):
     util.log.log("Loading trainset and labels")

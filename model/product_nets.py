@@ -674,9 +674,10 @@ class biasedMF(BaseModel):
         'reg_rate':0.025,
         'learning_rate': 0.03,
         'random_seed': 0,
+        "log_exp_product": False,
         "init_path": ""
     }
-    def __init__(self, layer_sizes, embd_size=50, opt_algo="gd", reg_rate=0.05, learning_rate=0.03, random_seed=0, init_path=None):
+    def __init__(self, layer_sizes, embd_size=50, opt_algo="gd", reg_rate=0.05, learning_rate=0.03, random_seed=0, log_exp_product=False, init_path=None):
         feature_sizes = layer_sizes[0]
         init_vars = []
         init_vars.append(('b0', [feature_sizes[0],1], 'zero', dtype)) #zero no problem?
@@ -684,6 +685,8 @@ class biasedMF(BaseModel):
         init_vars.append(('bg', [1,1], 'zero', dtype))
         init_vars.append(('w0', [feature_sizes[0], embd_size], 'tnormal', dtype))
         init_vars.append(('w1', [feature_sizes[1], embd_size], 'tnormal', dtype))
+        if log_exp_product:
+            init_vars.append(('w2', [2 * embd_size, 1], 'tnormal', dtype))
 
         self.graph = tf.Graph()
         with self.graph.as_default():
@@ -696,11 +699,16 @@ class biasedMF(BaseModel):
             b0 = self.vars['b0']
             b1 = self.vars['b1']
             bg = self.vars['bg']
+
             embd0 = tf.sparse_tensor_dense_matmul(self.X[0], w0)
             embd1 = tf.sparse_tensor_dense_matmul(self.X[1], w1)
             bias0 = tf.sparse_tensor_dense_matmul(self.X[0], b0)
             bias1 = tf.sparse_tensor_dense_matmul(self.X[1], b1)
-            self.y_prob = tf.reshape(tf.reduce_sum(tf.mul(embd0, embd1), 1), [-1, 1])
+            if log_exp_product:
+                w2 = self.vars['w2']
+                self.y_prob = tf.exp(tf.matmul(tf.concat(1, [embd0, embd1]), w2))
+            else:
+                self.y_prob = tf.reshape(tf.reduce_sum(tf.mul(embd0, embd1), 1), [-1, 1])
             print self.y_prob
             self.y_prob = tf.add(self.y_prob, bg)
             print self.y_prob

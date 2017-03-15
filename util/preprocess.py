@@ -23,6 +23,7 @@ def get_csr_mat_from_exclusive_field(col):
     return onehot_enc.fit_transform(np.atleast_2d(lbl_enc.fit_transform(col)).T)
 
 def get_csr_mat_from_multiple_field(col):
+    col.apply(lambda x:set() if x is None else x)
     mlb = MultiLabelBinarizer(sparse_output=True)
     return mlb.fit_transform(col)
 

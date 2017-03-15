@@ -39,8 +39,6 @@ def join_expand(csr_mat, ids, ids_to_idx):
     return vstack([csr_mat[ids_to_idx[ids[i]]] for i in xrange(len(ids))])
 
 def _apply_df(params):
-    df = pd.DataFrame()
-
     df, func, axis, args, kwargs = params
     log.log("%s apply to data with shape %s"%(os.getpid(), df.shape))
     df = df.apply(func, axis, args=args, **kwargs)

@@ -259,9 +259,9 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 		else:
 			business_mats.append(preproc.get_csr_mat_from_exclusive_field(business_attr_df[key]))
 		log_and_print("Handle %s in business df"%"contine field")
-	business_mats.append(preproc.get_csr_mat_from_contin_field(business_attr_df['longitude'], n_interval=200))
-	business_mats.append(preproc.get_csr_mat_from_contin_field(business_attr_df['latitude'], n_interval=200))
-	business_mats.append(preproc.get_csr_mat_from_contin_field(business_attr_df['review_count'], n_interval=30))
+	business_mats.append(preproc.get_csr_mat_from_contin_field(businesses_df['longitude'], n_interval=200))
+	business_mats.append(preproc.get_csr_mat_from_contin_field(businesses_df['latitude'], n_interval=200))
+	business_mats.append(preproc.get_csr_mat_from_contin_field(businesses_df['review_count'], n_interval=30))
 	bids = businesses_df['business_id'].values.tolist()
 
 	del businesses_df

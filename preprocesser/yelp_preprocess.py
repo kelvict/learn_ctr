@@ -118,6 +118,8 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 	review_keys.remove("text")
 	review_keys.remove("review_id")
 	reviews_df = build_df(reviews, keys=review_keys)
+	rbids = reviews_df['business_id'].values.tolist()
+	ruids = reviews_df['user_id'].values.tolist()
 	del reviews
 	gc.collect()
 	log_and_print("Shuffle Reviews")
@@ -223,7 +225,7 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 	for i in xrange(len(uids)):
 		uids_to_idx[uids[i]] = i
 	for i in xrange(len(user_mats)):
-		user_mats[i] = preproc.join_expand(user_mats[i], uids, uids_to_idx)
+		user_mats[i] = preproc.join_expand(user_mats[i], ruids, uids_to_idx)
 
 	#Handle business
 	business_keys = [u'city', u'neighborhood', u'name', u'business_id', u'longitude',
@@ -273,7 +275,7 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 	for i in xrange(len(bids)):
 		bids_to_idx[bids[i]] = i
 	for i in xrange(len(business_mats)):
-		business_mats[i] = preproc.join_expand(business_mats[i], bids, bids_to_idx)
+		business_mats[i] = preproc.join_expand(business_mats[i], rbids, bids_to_idx)
 
 
 	name = "rate"

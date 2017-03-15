@@ -271,7 +271,7 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 	log_and_print("Join Expand Business")
 	bids_to_idx = {}
 	for i in xrange(len(bids)):
-		bids_to_idx =[bids[i]] = i
+		bids_to_idx[bids[i]] = i
 	for i in xrange(len(business_mats)):
 		business_mats[i] = preproc.join_expand(business_mats[i], bids, bids_to_idx)
 

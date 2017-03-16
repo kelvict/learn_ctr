@@ -325,7 +325,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
         if not trainset_csr_pkl_path.endswith(".pkl"):
             param_str += "."+trainset_csr_pkl_path[-5:].replace('.','p')
         train_log_path += param_str
-        train_log_path += "."+str(min(best_eval_score, best_batch_eval_score)).replace('.','p')
+        train_log_path += "."+str(min(best_eval_score, best_batch_eval_score if best_batch_eval_score != -1 else best_eval_score)).replace('.','p')
         train_log_path += "."+str(test_score).replace('.','p')
         fo = open(train_log_path, "w")
         json.dump(json_log, fo, indent=True, default=util.json_util.json_numpy_serialzer)

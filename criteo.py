@@ -13,6 +13,7 @@ if __name__ == "__main__":
 	#Yelp
 	parser.add_argument("--yelp", action="store_true")
 	parser.add_argument("--n_friend", type=int,default=100)
+	parser.add_argument("--output_suffix", type=str)
 	#param
 	parser.add_argument("--params", action="store_true", help="params input")
 	parser.add_argument("--n_embd", type=int, help="embedding size")
@@ -80,11 +81,11 @@ if __name__ == "__main__":
 				trainset_rates = [0.1 * i for i in range(1,10)]
 				for random_seed in random_seeds:
 					for trainset_rate in trainset_rates:
-						yelp_preprocess.preprocess(random_seed, trainset_rate, args.test, args.n_friend)
+						yelp_preprocess.preprocess(random_seed, trainset_rate, args.test, args.n_friend, args.output_suffix)
 			else:
 				random_seed = 0
 				trainset_rate = 0.9
-				yelp_preprocess.preprocess(random_seed, trainset_rate, args.test, args.n_friend)
+				yelp_preprocess.preprocess(random_seed, trainset_rate, args.test, args.n_friend, args.output_suffix)
 		elif args.train:
 			import os
 			if len(args.gpu) != 0:

@@ -27,11 +27,13 @@ def get_csr_mat_from_multiple_field(col):
     mlb = MultiLabelBinarizer(sparse_output=True)
     return mlb.fit_transform(col)
 
-def get_csr_mat_from_contin_field(col, n_interval=10, uniq_bins=None,estimate_interval_size=None):
+def get_csr_mat_from_contin_field(col, n_interval=5, uniq_bins=None,estimate_interval_size=None):
+    interval_size = (col.max()-col.min())/float(n_interval)
+    bins = [col.min()+i*interval_size for i in xrange(n_interval)]
     if estimate_interval_size is not None:
         n_interval = (col.max() - col.min()) / float(estimate_interval_size)
     if uniq_bins is None:
-        uniq_bins = np.unique(algos.quantile(col, np.linspace(0, 1, n_interval)))
+        uniq_bins = np.unique(np.concatenate([algos.quantile(col, np.linspace(0, 1, n_interval)), bins]))
 	col = pd.tools.tile._bins_to_cuts(col, uniq_bins, include_lowest=True)
     return get_csr_mat_from_exclusive_field(col)
 

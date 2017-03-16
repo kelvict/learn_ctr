@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 for conf_id in 1; do
-	for lr in 0.0002; do
-		for width in 10; do
+	for lr in 0.001; do
+		for width in 20; do
 			for n_embd in 50; do
 				for reg in 0.001; do
 					python criteo.py --ml --train  --gpu 0 \

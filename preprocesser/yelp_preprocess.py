@@ -140,14 +140,14 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 	#["funny","useful","cool","day","days_delta","year","month","weekend"]
 	review_mats = []
 	log_and_print("Handle Contin Feat in Review Mats")
-	review_mats.append(preproc.get_csr_mat_from_contin_field(reviews_df['funny'],n_interval=20))
-	review_mats.append(preproc.get_csr_mat_from_contin_field(reviews_df['useful'],n_interval=20))
-	review_mats.append(preproc.get_csr_mat_from_contin_field(reviews_df['cool'],n_interval=20))
+	review_mats.append(preproc.get_csr_mat_from_contin_field(reviews_df['funny'],n_interval=30))
+	review_mats.append(preproc.get_csr_mat_from_contin_field(reviews_df['useful'],n_interval=30))
+	review_mats.append(preproc.get_csr_mat_from_contin_field(reviews_df['cool'],n_interval=30))
 
 	review_time_info_df = reviews_df[u'date'].apply(preproc.extract_date_info_from_str)
 	log_and_print("Handle Date in Review Mats")
-	review_mats.append(preproc.get_csr_mat_from_contin_field(review_time_info_df['day'], estimate_interval_size=10))
-	review_mats.append(preproc.get_csr_mat_from_contin_field(review_time_info_df['days_delta'], estimate_interval_size=15))
+	review_mats.append(preproc.get_csr_mat_from_contin_field(review_time_info_df['day'], n_interval=100, estimate_interval_size=10))
+	review_mats.append(preproc.get_csr_mat_from_contin_field(review_time_info_df['days_delta'], n_interval=100, estimate_interval_size=15))
 	review_time_info_keys = review_time_info_df.keys().tolist()
 	review_time_info_keys.remove('day')
 	review_time_info_keys.remove('days_delta')
@@ -186,7 +186,7 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 	if n_friend_sample > 0:
 		log_and_print("To CSR Mat of Friends in User df")
 		user_mats.append(preproc.get_csr_mat_from_multiple_field(users_df['friends']))
-	contin_field_names_with_500_intervals = [u'useful', u'compliment_photos',
+	contin_field_names_with_30_intervals = [u'useful', u'compliment_photos',
 	             u'compliment_list', u'compliment_funny', u'funny',
 	             u'review_count', u'fans',
 	             u'compliment_note', u'compliment_plain', u'compliment_writer',
@@ -194,17 +194,17 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 	             u'compliment_more',  u'compliment_hot',
 	             u'cool', u'compliment_profile', u'compliment_cool']
 
-	for key in contin_field_names_with_500_intervals:
+	for key in contin_field_names_with_30_intervals:
 		log_and_print("Handle %s in User Mats"%key)
-		user_mats.append(preproc.get_csr_mat_from_contin_field(users_df[key], n_interval=500))
+		user_mats.append(preproc.get_csr_mat_from_contin_field(users_df[key], n_interval=30))
 
 	log_and_print("Handle %s in Review Mats"%"average_stars")
 	user_mats.append(preproc.get_csr_mat_from_contin_field(
 		users_df["average_stars"], uniq_bins=[i/2.0 for i in range(0, 12)]))
 	log_and_print("Handle %s in Review Mats"%"Yelping Since")
 	yelp_time_info_df = users_df['yelping_since'].apply(preproc.extract_date_info_from_str)
-	user_mats.append(preproc.get_csr_mat_from_contin_field(yelp_time_info_df['day'], estimate_interval_size=15))
-	user_mats.append(preproc.get_csr_mat_from_contin_field(yelp_time_info_df['days_delta'], estimate_interval_size=5))
+	user_mats.append(preproc.get_csr_mat_from_contin_field(yelp_time_info_df['day'], n_interval=20,estimate_interval_size=15))
+	user_mats.append(preproc.get_csr_mat_from_contin_field(yelp_time_info_df['days_delta'], n_interval=30, estimate_interval_size=5))
 
 	yelp_time_info_keys = yelp_time_info_df.keys().tolist()
 	yelp_time_info_keys.remove('day')
@@ -261,8 +261,8 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 		else:
 			business_mats.append(preproc.get_csr_mat_from_exclusive_field(business_attr_df[key]))
 		log_and_print("Handle %s in business df"%"contine field")
-	business_mats.append(preproc.get_csr_mat_from_contin_field(businesses_df['longitude'], n_interval=200))
-	business_mats.append(preproc.get_csr_mat_from_contin_field(businesses_df['latitude'], n_interval=200))
+	business_mats.append(preproc.get_csr_mat_from_contin_field(businesses_df['longitude'], n_interval=100))
+	business_mats.append(preproc.get_csr_mat_from_contin_field(businesses_df['latitude'], n_interval=100))
 	business_mats.append(preproc.get_csr_mat_from_contin_field(businesses_df['review_count'], n_interval=30))
 	bids = businesses_df['business_id'].values.tolist()
 

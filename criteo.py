@@ -103,7 +103,7 @@ if __name__ == "__main__":
 					criteo_train.train_model_with_conf(
 						conf_path, grid_param_conf_path=grid_param_conf_path,
 						ctr_or_recommend=False, predict_batch_size=10000, params=params)
-	if args.ml:
+	elif args.ml:
 		if args.preprocess:
 			from preprocesser import movielens_preprocess
 			if args.make_multi_dataset:

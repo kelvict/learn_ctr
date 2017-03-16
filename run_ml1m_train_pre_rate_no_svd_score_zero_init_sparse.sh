@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 for conf_id in 52; do
 	for lr in 0.0002; do
-		for trainset_rate in 0.9 0.8; do
+		for trainset_rate in 0.5 0.4; do
 			for random_seed in `seq 0 4`; do
 				for width in 5; do
 					for n_embd in 75; do

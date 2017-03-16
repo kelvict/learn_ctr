@@ -91,11 +91,11 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 	attr_str = str(n_friend_sample)+"_"+str(random_seed)+"_"+str(trainset_rate).replace(".","p")\
 	           +("_test" if is_test else "") + (suffix if len(suffix)==0 else "_"+suffix)
 	output_pattern = prefix+"%s_"+attr_str+".json"
-	field_sizes_output_pattern = prefix+"%s_field_sizes_"+attr_str+".json"
-	csr_mats_output_pattern = prefix+"%s_csr_mats_"+attr_str+".json"
-	train_data_output_pattern = prefix+"%s_train_data_"+attr_str+".json"
-	test_data_output_pattern = prefix+"%s_test_data_"+attr_str+".json"
-	label_output_path = output_pattern%"labels"
+	field_sizes_output_pattern = prefix+"%s_field_sizes_"+attr_str+".pkl"
+	csr_mats_output_pattern = prefix+"%s_csr_mats_"+attr_str+".pkl"
+	train_data_output_pattern = prefix+"%s_train_data_"+attr_str+".pkl"
+	test_data_output_pattern = prefix+"%s_test_data_"+attr_str+".pkl"
+	label_output_path = prefix+"labels_"+attr_str+".csv"
 	reviews = []
 	businesses = []
 	users = []

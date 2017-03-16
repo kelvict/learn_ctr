@@ -19,7 +19,7 @@ from util.optimizer import RadamOptimizer, NadamOptimizer
 import json
 import gc
 
-DTYPE = tf.float16
+DTYPE = tf.float32
 
 STDDEV = 1e-3
 MINVAL = -1e-2

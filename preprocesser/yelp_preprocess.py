@@ -137,7 +137,7 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 	for key in exclusive_discrete_keys:
 		log_and_print("Handle %s in Rate Mats"%key)
 		rate_mats.append(preproc.get_csr_mat_from_exclusive_field(reviews_df[key]))
-
+	#["funny","useful","cool","day","days_delta","year","month","weekend"]
 	review_mats = []
 	log_and_print("Handle Contin Feat in Review Mats")
 	review_mats.append(preproc.get_csr_mat_from_contin_field(reviews_df['funny'],n_interval=20))

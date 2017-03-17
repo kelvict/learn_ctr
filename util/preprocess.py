@@ -29,7 +29,7 @@ def get_csr_mat_from_multiple_field(col):
 
 def get_csr_mat_from_contin_field(col, n_interval=5, uniq_bins=None,estimate_interval_size=None):
     interval_size = (col.max()-col.min())/float(n_interval)
-    bins = [col.min()+i*interval_size for i in xrange(n_interval)]
+    bins = [col.min()+i*interval_size for i in xrange(n_interval+1)]
     if estimate_interval_size is not None:
         n_interval = (col.max() - col.min()) / float(estimate_interval_size)
     if uniq_bins is None:

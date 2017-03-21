@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-for conf_id in 2 1 3; do
-	for lr in 0.0002; do
-		for width in 5; do
-			for n_embd in 50; do
+for conf_id in 11; do
+	for lr in 0.00005; do
+		for width in 5 10; do
+			for n_embd in 50 75; do
 				for reg in 0.005; do
 					python criteo.py --ml --train  --gpu 1 \
 					--conf_path ./conf/yelp_RecIPNN_rate_review_user_business_no_friend_${conf_id}.conf \

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 for conf_id in 1; do
-	for lr in 0.0002; do
+	for lr in 0.00005; do
 		for reg in 0.001 0.01; do
 			for n_embd in 50; do
 				for width in 5 10; do

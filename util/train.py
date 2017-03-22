@@ -368,6 +368,16 @@ def init_var_map(init_vars, init_path=None):
         elif init_method == "normal_one":
             var_map[var_name] = tf.Variable(tf.random_normal(var_shape, mean=1.0, stddev=STDDEV, dtype=dtype),
                                             dtype=dtype)
+        elif init_method == "tnormal_user_product_one":
+            const_mat = np.zeros(shape=var_shape, dtype=dtype)
+            if var_shape[0] > 1:
+                const_mat[1][0] = 1
+            if var_shape[1] > 1:
+                const_mat[0][1] = 1
+            const_mat = tf.constant(const_mat,dtype=dtype)
+            init_val = tf.truncated_normal(var_shape, mean=0.0, stddev=STDDEV, dtype=dtype)
+            init_val = const_mat+init_val
+            var_map[var_name] = tf.Variable(init_val, dtype=dtype)
         elif init_method == 'tnormal':
             var_map[var_name] = tf.Variable(tf.truncated_normal(var_shape, mean=0.0, stddev=STDDEV, dtype=dtype),
                                             dtype=dtype)

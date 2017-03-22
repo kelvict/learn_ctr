@@ -470,12 +470,13 @@ class RecIPNN(BaseModel):
         "add_u_auto_rec":False,
         "add_i_auto_rec":False,
         "add_user_product_bias":True,
+        "init_with_user_product_one":False,
         "prev_item_vec_cnt":0
     }
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, short_cuts=None, layer_l2=None, kernel_l2=None,
                  init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None,
                  p_mode=1, add_svd_score=False, init_with_normal_one=True, drop_embedding_layer=False,
-                 add_u_auto_rec=False, add_i_auto_rec=False, prev_item_vec_cnt=0, add_user_product_bias=True):
+                 add_u_auto_rec=False, add_i_auto_rec=False, prev_item_vec_cnt=0, add_user_product_bias=True, init_with_user_product_one=False):
         init_vars = []
         num_inputs = len(layer_sizes[0])
         factor_order = layer_sizes[1]
@@ -502,7 +503,8 @@ class RecIPNN(BaseModel):
             layer_input = layer_sizes[i]
             layer_output = layer_sizes[i + 1]
             init_vars.append(('w%d' % i, [layer_input, layer_output],
-                              'normal_one' if init_with_normal_one else 'tnormal', dtype)) #critical modify tnormal_zero to normal_one
+                              ('normal_one' if not init_with_user_product_one else "tnormal_user_product_one")
+                              if init_with_normal_one else 'tnormal', dtype)) #critical modify tnormal_zero to normal_one
             init_vars.append(('b%d' % i, [layer_output], 'zero', dtype))
 
         #AutoRec

@@ -469,12 +469,13 @@ class RecIPNN(BaseModel):
         "add_svd_score":False,
         "add_u_auto_rec":False,
         "add_i_auto_rec":False,
+        "add_user_product_bias":True,
         "prev_item_vec_cnt":0
     }
     def __init__(self, layer_sizes=None, layer_acts=None, layer_keeps=None, short_cuts=None, layer_l2=None, kernel_l2=None,
                  init_path=None, opt_algo='gd', learning_rate=1e-2, random_seed=None,
                  p_mode=1, add_svd_score=False, init_with_normal_one=True, drop_embedding_layer=False,
-                 add_u_auto_rec=False, add_i_auto_rec=False, prev_item_vec_cnt=0):
+                 add_u_auto_rec=False, add_i_auto_rec=False, prev_item_vec_cnt=0, add_user_product_bias=True):
         init_vars = []
         num_inputs = len(layer_sizes[0])
         factor_order = layer_sizes[1]
@@ -619,8 +620,9 @@ class RecIPNN(BaseModel):
                 layers.append(l)
                 print i, layers
             self.score_bias = tf.zeros([1,1])
-            for i in user_item_fields:
-                self.score_bias = tf.add(self.score_bias, tf.sparse_tensor_dense_matmul(self.X[i], self.vars['field_score_b_%d'%i]))
+            if add_user_product_bias:
+                for i in user_item_fields:
+                    self.score_bias = tf.add(self.score_bias, tf.sparse_tensor_dense_matmul(self.X[i], self.vars['field_score_b_%d'%i]))
 
             if add_svd_score:
                 if drop_embedding_layer:

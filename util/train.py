@@ -369,7 +369,7 @@ def init_var_map(init_vars, init_path=None):
             var_map[var_name] = tf.Variable(tf.random_normal(var_shape, mean=1.0, stddev=STDDEV, dtype=dtype),
                                             dtype=dtype)
         elif init_method == "tnormal_user_product_one":
-            const_mat = np.zeros(shape=var_shape, dtype=dtype)
+            const_mat = np.zeros(shape=var_shape, dtype=np.float32)
             if var_shape[0] > 1:
                 const_mat[1][0] = 1
             if var_shape[1] > 1:

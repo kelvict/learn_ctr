@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 for conf_id in 2; do
-	for lr in 0.0002; do
+	for lr in 0.005; do
 		for trainset_rate in 0.9; do
 			for random_seed in `seq 0 2`; do
 				for width in 5 10 15; do

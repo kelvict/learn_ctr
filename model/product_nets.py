@@ -504,7 +504,7 @@ class RecIPNN(BaseModel):
             layer_input = layer_sizes[i]
             layer_output = layer_sizes[i + 1]
             init_vars.append(('w%d' % i, [layer_input, layer_output],
-                              ('normal_one' if not init_with_user_product_one else "tnormal_user_product_one")
+                              ('normal_one' if not init_with_user_product_one else "hidden_tnormal_user_product_one")
                               if init_with_normal_one else 'tnormal', dtype)) #critical modify tnormal_zero to normal_one
             init_vars.append(('b%d' % i, [layer_output], 'zero', dtype))
 

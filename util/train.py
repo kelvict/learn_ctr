@@ -137,7 +137,7 @@ def split_data_by_field(data, field_offsets):
 def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_path=None, n_epoch=5,
           batch_size=256, train_set_percent = 0.75,
           should_split_by_field=False, field_sizes_pkl_path=None,
-          should_early_stop=True, early_stop_interval=10, batch_eval_interval=50, should_dump_model=False,
+          should_early_stop=True, early_stop_interval=10, batch_eval_interval=-1, should_dump_model=False,
           model_dump_path="", shuffle_trainset=True, eval_interval=1, train_log_path="", ctr_or_recommend=True,
           predict_batch_size=10000, min_rec_pred=1, max_rec_pred=5,**kwargs):
     util.log.log("Start to train model")

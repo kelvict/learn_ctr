@@ -492,12 +492,13 @@ class RecIPNN(BaseModel):
             field_size = layer_sizes[0][i]
             init_vars.append(('field_score_b_%d'%i, [field_size, 1], 'tnormal', dtype))
         init_vars.append(('w1', [num_inputs * factor_order, layer_sizes[2]], 'tnormal', dtype))
+        init_type = ('normal_one' if not init_with_user_product_one else "tnormal_user_product_one") if init_with_normal_one else 'tnormal'
         if p_mode == 0:
-            init_vars.append(('k1', [num_inputs, layer_sizes[2]], 'tnormal', dtype))
+            init_vars.append(('k1', [num_inputs, layer_sizes[2]], init_type, dtype))
         elif p_mode == 1:
-            init_vars.append(('k1', [num_inputs * num_inputs, layer_sizes[2]], 'tnormal', dtype))
+            init_vars.append(('k1', [num_inputs * num_inputs, layer_sizes[2]], init_type, dtype))
         else:
-            init_vars.append(('k1', [num_inputs, layer_sizes[2]], 'tnormal', dtype))
+            init_vars.append(('k1', [num_inputs, layer_sizes[2]], init_type, dtype))
         init_vars.append(('b1', [layer_sizes[2]], 'zero', dtype))
         for i in range(2, len(layer_sizes) - 1):
             layer_input = layer_sizes[i]

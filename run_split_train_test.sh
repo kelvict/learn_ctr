@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 :'
 python criteo.py --split_train_test --dataset_path dataset/ctr/criteo/train.txt.20170211_011802.discrete_50_26_contin_100000_2_0_xgb_40.all_split_by_field_csr_mats.pkl \
 --labels_path dataset/ctr/criteo/train.txt.20170211_011802.labels.txt \

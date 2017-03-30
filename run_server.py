@@ -4,5 +4,7 @@
 #
 
 from webserver import server
-
-server.run_server()
+from tornado.options import define, options, parse_command_line
+define("port", default=8008, help="run on the given port", type=int)
+parse_command_line()
+server.run_server(options.port)

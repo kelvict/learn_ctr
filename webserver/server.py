@@ -8,9 +8,6 @@ import tornado.options
 import tornado.web
 import os
 
-from tornado.options import define, options
-define("port", default=8008, help="run on the given port", type=int)
-
 from preprocesser import yelp_preprocess
 from sklearn.externals import joblib
 import json
@@ -26,17 +23,16 @@ class SearchHandler(tornado.web.RequestHandler):
 class UserPageHandler(tornado.web.RequestHandler):
     def get(self):
         user_page_data = yelp_preprocess.get_user_page_data(0,
-                                           app.limit_uid_to_reviews_map,
-                                           app.uid_to_user_map,
-                                           app.bid_to_business_map)
+                                           self.application.limit_uid_to_reviews_map,
+                                           self.application.uid_to_user_map,
+                                           self.application.bid_to_business_map)
         user = user_page_data['user']
         rec_records = user_page_data['rec_records']
         visit_records = user_page_data['visit_records']
         self.render("user.html", user=user, recs=rec_records, histories=visit_records)
 
 
-def run_server():
-    tornado.options.parse_command_line()
+def run_server(port):
     app = tornado.web.Application(
 	    handlers=[(r'/', IndexHandler), (r'/user', UserPageHandler), (r'/search', SearchHandler)],
 	    template_path=os.path.join(os.path.dirname(__file__), "templates"),
@@ -48,7 +44,7 @@ def run_server():
     server_data = json.load(f)
     app.limit_uid_to_reviews_map, app.uid_to_user_map, app.bid_to_business_map = server_data
     http_server = tornado.httpserver.HTTPServer(app)
-    http_server.listen(options.port)
+    http_server.listen()
     tornado.ioloop.IOLoop.instance().start()
 if __name__ == "__main__":
     run_server()

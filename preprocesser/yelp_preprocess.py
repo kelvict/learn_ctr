@@ -86,13 +86,14 @@ def get_server_data(is_test=False, min_reviews_cnt=20):
 	print "get_uid_to_reviews"
 	#uid_to_reviews_map = get_uid_to_reviews(reviews_5p_in_bids)
 	uid_to_reviews_map = get_uid_to_reviews(reviews_5p_in_bids)
+	limit_uid_to_reviews_map = {}
 	if min_reviews_cnt > 0:
 		for key in uid_to_reviews_map:
 			if len(uid_to_reviews_map[key]) < min_reviews_cnt:
-				del uid_to_reviews_map[key]
+				limit_uid_to_reviews_map[key] =  uid_to_reviews_map[key]
 	uid_to_user_map = get_uid_to_user_map(users)
 	bid_to_business_map = get_bid_to_business_map(businesses)
-	return uid_to_reviews_map, uid_to_user_map, bid_to_business_map
+	return limit_uid_to_reviews_map, uid_to_user_map, bid_to_business_map
 
 def get_business_attr_key_values(businesses):
 	key_to_option = {}

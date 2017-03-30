@@ -243,3 +243,4 @@ dataset/
 reference/
 log/*
 document/
+webserver/static/img/*

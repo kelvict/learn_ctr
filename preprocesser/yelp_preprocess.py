@@ -75,19 +75,21 @@ def get_uid_to_user_map(users):
 def filter_with_set(objs, key, field_set):
 	return [obj for obj in objs if obj[key] in field_set]
 
-def get_server_data(is_test=False):
+def get_server_data(is_test=False, min_reviews_cnt=20):
 	reviews, users, businesses, photos = get_reviews_users_businesses_photos(is_test)
 	print "Data loaded"
 	reviews_5p = [review for review in reviews if review['stars'] == 5]
-	inside_photos = [photo for photo in photos if photo['label']=="outside"]
-	inside_photos_bids = set([photo['business_id'] for photo in inside_photos])
-	reviews_5p_in_bids = [review for review in reviews_5p if review['business_id'] in inside_photos_bids]
+	#inside_photos = [photo for photo in photos if photo['label']=="outside"]
+	#inside_photos_bids = set([photo['business_id'] for photo in inside_photos])
+	#reviews_5p_in_bids = [review for review in reviews_5p if review['business_id'] in inside_photos_bids]
+	reviews_5p_in_bids = reviews_5p
 	print "get_uid_to_reviews"
+	#uid_to_reviews_map = get_uid_to_reviews(reviews_5p_in_bids)
 	uid_to_reviews_map = get_uid_to_reviews(reviews_5p_in_bids)
-
-	for key in uid_to_reviews_map:
-		if len(uid_to_reviews_map[key]) < 20:
-			del uid_to_reviews_map[key]
+	if min_reviews_cnt > 0:
+		for key in uid_to_reviews_map:
+			if len(uid_to_reviews_map[key]) < min_reviews_cnt:
+				del uid_to_reviews_map[key]
 	uid_to_user_map = get_uid_to_user_map(users)
 	bid_to_business_map = get_bid_to_business_map(businesses)
 	return uid_to_reviews_map, uid_to_user_map, bid_to_business_map

@@ -11,6 +11,7 @@ from util import preprocess as preproc
 from sklearn.externals import joblib
 prefix = "dataset/recommend/yelp/"
 academic_dataset_json_prefix = "yelp_academic_dataset_%s.json"
+
 from util.log import log_and_print
 import random
 import gc
@@ -34,6 +35,61 @@ def get_reviews_users_businesses(is_test=True):
 	for line in open(prefix+academic_dataset_json_prefix%("business")):
 		businesses.append(json.loads(line))
 	return reviews, users, businesses
+
+def get_reviews_users_businesses_photos(is_test=True):
+	reviews, users, businesses= get_reviews_users_businesses(is_test)
+	f = open(prefix+"photo_id_to_business_id.json")
+	photos = json.load(f)
+	return reviews, users, businesses, photos
+
+def get_uid_to_bids_map(reviews):
+	uid_to_bids = {}
+	for review in reviews:
+		if review['user_id'] not in uid_to_bids:
+			uid_to_bids[review['user_id']] = [review['business_id']]
+		else:
+			uid_to_bids[review['user_id']].append(review['business_id'])
+	return uid_to_bids
+
+def get_uid_to_reviews(reviews):
+	uid_to_reviews = {}
+	for review in reviews:
+		if review['user_id'] not in uid_to_reviews:
+			uid_to_reviews[review['user_id']] = [review]
+		else:
+			uid_to_reviews[review['user_id']].append(review)
+	return uid_to_reviews
+
+def get_bid_to_business_map(businesses):
+	bid_to_business_map = {}
+	for business in businesses:
+		bid_to_business_map[business['business_id']] = business
+	return bid_to_business_map
+def get_uid_to_user_map(users):
+	uid_to_user_map = {}
+	for user in users:
+		uid_to_user_map[user['user_id']] = user
+	return uid_to_user_map
+
+def filter_with_set(objs, key, field_set):
+	return [obj for obj in objs if obj[key] in field_set]
+
+def get_server_data(is_test=False):
+	reviews, users, businesses, photos = get_reviews_users_businesses_photos(is_test)
+	print "Data loaded"
+	reviews_5p = [review for review in reviews if review['stars'] == 5]
+	inside_photos = [photo for photo in photos if photo['label']=="outside"]
+	inside_photos_bids = set([photo for photo in inside_photos['business_id']])
+	reviews_5p_in_bids = [review for review in reviews_5p if review['business_id'] in inside_photos_bids]
+	print "get_uid_to_reviews"
+	uid_to_reviews_map = get_uid_to_reviews(reviews_5p_in_bids)
+
+	for key in uid_to_reviews_map:
+		if len(uid_to_reviews_map[key]) < 20:
+			del uid_to_reviews_map[key]
+	uid_to_user_map = get_uid_to_user_map(users)
+	bid_to_business_map = get_bid_to_business_map(businesses)
+	return uid_to_reviews_map, uid_to_user_map, bid_to_business_map
 
 def get_business_attr_key_values(businesses):
 	key_to_option = {}

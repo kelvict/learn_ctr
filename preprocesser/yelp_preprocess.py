@@ -89,7 +89,7 @@ def get_server_data(is_test=False, min_reviews_cnt=20):
 	limit_uid_to_reviews_map = {}
 	if min_reviews_cnt > 0:
 		for key in uid_to_reviews_map:
-			if len(uid_to_reviews_map[key]) < min_reviews_cnt:
+			if len(uid_to_reviews_map[key]) > min_reviews_cnt:
 				limit_uid_to_reviews_map[key] =  uid_to_reviews_map[key]
 	uid_to_user_map = get_uid_to_user_map(users)
 	bid_to_business_map = get_bid_to_business_map(businesses)

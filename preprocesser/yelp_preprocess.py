@@ -95,6 +95,33 @@ def get_server_data(is_test=False, min_reviews_cnt=20):
 	bid_to_business_map = get_bid_to_business_map(businesses)
 	return limit_uid_to_reviews_map, uid_to_user_map, bid_to_business_map
 
+def get_user_page_data(i, limit_uid_to_reviews_map, uid_to_user_map, bid_to_business_map):
+	reviews = limit_uid_to_reviews_map[limit_uid_to_reviews_map.keys()[i%len(limit_uid_to_reviews_map.keys())]]
+	reviews = sorted(reviews, key=lambda d:d['date'])
+	user = uid_to_user_map[reviews[0]['user_id']]
+	review_records = []
+
+	for review in reviews:
+		review['business'] = bid_to_business_map[review['business_id']]
+		review_records.append(review)
+
+	visit_records = []
+	rec_records = []
+	records_size = len(review_records)
+	if records_size < 10:
+		rec_records = review_records
+	else:
+		rec_records = review_records[-10:]
+		visit_records = visit_records[-20:-10]
+
+
+	return {
+		'user':user,
+		"rec_records":rec_records,
+		"visit_records":visit_records
+	}
+
+
 def get_business_attr_key_values(businesses):
 	key_to_option = {}
 	key_to_type = {}

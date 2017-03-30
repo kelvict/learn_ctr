@@ -108,11 +108,11 @@ def get_user_page_data(i, limit_uid_to_reviews_map, uid_to_user_map, bid_to_busi
 	visit_records = []
 	rec_records = []
 	records_size = len(review_records)
-	if records_size < 10:
+	if records_size <= 10:
 		rec_records = review_records
 	else:
 		rec_records = review_records[-10:]
-		visit_records = visit_records[-20:-10]
+		visit_records = review_records[-20:-10]
 
 
 	return {

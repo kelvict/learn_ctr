@@ -65,6 +65,7 @@ def get_bid_to_business_map(businesses):
 	for business in businesses:
 		bid_to_business_map[business['business_id']] = business
 	return bid_to_business_map
+
 def get_uid_to_user_map(users):
 	uid_to_user_map = {}
 	for user in users:
@@ -79,7 +80,7 @@ def get_server_data(is_test=False):
 	print "Data loaded"
 	reviews_5p = [review for review in reviews if review['stars'] == 5]
 	inside_photos = [photo for photo in photos if photo['label']=="outside"]
-	inside_photos_bids = set([photo for photo in inside_photos['business_id']])
+	inside_photos_bids = set([photo['business_id'] for photo in inside_photos])
 	reviews_5p_in_bids = [review for review in reviews_5p if review['business_id'] in inside_photos_bids]
 	print "get_uid_to_reviews"
 	uid_to_reviews_map = get_uid_to_reviews(reviews_5p_in_bids)

@@ -33,17 +33,25 @@
   </div><!-- /.container-fluid -->
 </nav>
     <div class="container" style="display:table;height: 225px;">
-        <div class="row" style="display:table-cell;vertical-align: middle;">
+        <div class="row" style="display:table-cell;vertical-align: middle;padding:150px;">
           <h1 class="text-center" style="margin: 26px 10px;">Yelp商户推荐系统</h1>
           <div class="col-lg-offset-4 col-lg-4">
             <div class="input-group">
-              <input type="text" class="form-control" placeholder="输入用户ID">
+              <input type="text" class="form-control" id="search-input" placeholder="输入用户ID">
               <span class="input-group-btn">
-                <button class="btn btn-success" type="button">搜索</button>
+                <button class="btn btn-success" id="search-btn" type="button">搜索</button>
               </span>
             </div><!-- /input-group -->
           </div><!-- /.col-lg-6 -->
         </div><!-- /.row -->
     </div>
 </body>
+<script>
+    $(function(){
+        $("#search-btn").click(function(){
+            uid = $("#search-input").val()
+            window.location.href = "/user?uid="+uid
+        })
+    });
+</script>
 </html>

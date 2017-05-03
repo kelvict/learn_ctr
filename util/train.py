@@ -350,6 +350,20 @@ def predict(model, eval_data, batch_size=100000):
     preds = np.vstack(preds)
     return preds
 
+def init_var(method, shape, dtype=np.float32, **kwargs):
+    if method == "zero":
+        return tf.zeros(shape, dtype)
+    elif method == "one":
+        return tf.ones(shape, dtype)
+    elif method == 'normal':
+        return tf.random_normal(shape, mean= kwargs["mean"] if "mean" in kwargs else 0.0,
+                         stddev=kwargs["stddev"] if "stddev" in kwargs else STDDEV,
+                         dtype=dtype)
+    elif method == "tnormal":
+        return tf.truncated_normal(shape, mean= kwargs["mean"] if "mean" in kwargs else 0.0,
+                         stddev=kwargs["stddev"] if "stddev" in kwargs else STDDEV,
+                         dtype=dtype)
+
 def init_var_map(init_vars, init_path=None):
     if init_path is not None:
         load_var_map = pkl.load(open(init_path, 'rb'))

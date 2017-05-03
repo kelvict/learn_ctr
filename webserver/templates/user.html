@@ -11,6 +11,11 @@
     <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
     <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="//cdn.bootcss.com/jquery.pin/1.0.1/jquery.pin.min.js"></script>
+	<script src="//cdn.bootcss.com/masonry/4.1.1/masonry.pkgd.min.js"></script>
+	<style type="text/css">
+		h5{font-size: 22px;
+			margin:0 0 10px 0;}
+	</style>
 </head>
 <body>
 <nav class="navbar navbar-default .navbar-fixed-top" style="margin:0;">
@@ -31,6 +36,13 @@
     </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->
 </nav>
+<script>
+	$('.grid').masonry({
+	  // options...
+	  itemSelector: '.grid-item',
+	  columnWidth: 200
+	});
+</script>
 <div class="container-fluid">
 	<div class="row-fluid">
 		<div class="col-lg-12">
@@ -38,17 +50,17 @@
 				<div id="left-col" class="col-lg-3" style="padding: 40px 20px; background: aliceblue;">
 					<img alt="140x140" src="{{static_url('img/headphoto.jpg')}}" class="img-rounded img-responsive center-block" />
 					<h3 class="text-left">
-						{{user['name']}} <small>#9527</small>
+						{{user['name']}} <small>#{{uid}}</small>
 					</h3>
 					<p>
 						这个家伙很懒，他什么也没说。
 					</p>
 					<ul>
 						<li>
-							平均评分4.5
+							平均评分{{user['average_stars']}}
 						</li>
 						<li>
-							注册自 2015年5月10日
+							注册自 {{user['yelping_since']}}
 						</li>
 					</ul>
 					<ul>
@@ -57,10 +69,10 @@
 						</li>
 						<ul class="unstyled">
 							<li>
-								10个好友
+								{{len(user['friends'])}}个好友
 							</li>
 							<li>
-								10个粉丝
+								{{user['fans']}}个粉丝
 							</li>
 						</ul>
 						<li>
@@ -68,7 +80,7 @@
 						</li>
 						<ul class="unstyled">
 							<li>
-								3个评论
+								{{user['review_count']}}个评论
 							</li>
 						</ul>
 						<li>
@@ -76,85 +88,138 @@
 						</li>
 						<ul class="unstyled">
 							<li>
-								0个Cool
+								{{user['cool']}}个Cool
 							</li>
 							<li>
-								5个Userful
+								{{user['useful']}}个Userful
 							</li>
 							<li>
-								10个Funny
+								{{user['funny']}}个Funny
 							</li>
 						</ul>
 					</ul>
 				</div>
-				<div class="col-lg-6" style="padding: 10px;">
-					<ul class="thumbnails" style="list-style: none;">
+				<div class="col-lg-6" style="padding: 0 10px;">
+					<h3 style="margin:10px;padding:0px 0px;font-size:27px;">猜你喜欢</h3>
+					<div class="grid" data-masonry='{ "itemSelector": ".grid-item", "columnWidth": 290 }'>
+					  {% for rec in recs%}
+						<div class="thumbnail grid-item" style="width: 280px">
+							<div class="caption">
+								<h5>
+									{{rec['business']['name']}}
+								</h5>
+								<div>
+									猜你给{{rec['stars']}}分，
+								</div>
+								<div>
+									属于
+									{%for cat in rec['business']['categories']%}
+										{{cat}},
+									{%end%}
+
+								</div>
+								<p>
+									位于 {{rec['business']['city']}} 城 {{rec['business']['state']}} 洲，
+								</p>
+								<p>
+									{{rec['business']['address']}}
+								</p>
+								{%if rec['business'][u'neighborhood']!=""%}
+								<p>
+									邻近{{rec['business'][u'neighborhood']}}
+								</p>
+								{%end%}
+								<p>
+									被评论{{rec['business']['review_count']}}次
+								</p>
+								<p>
+									平均得分{{rec['business']['stars']}}分
+								</p>
+								<p style="display: none;">
+									<a class="btn btn-primary" href="#">更多</a> <a class="btn" href="#">分享</a>
+								</p>
+							</div>
+						</div>
+						{% end %}
+					</div>
+					<ul class="thumbnails" style="list-style: none;padding:0px; display: none;">
+						{% for rec in recs%}
 						<li class="col-lg-6">
 							<div class="thumbnail">
-								<img alt="400x300" src="{{static_url('img/subset00/0024xoavuUkD7LT9AWcVsw.jpg')}}" />
 								<div class="caption">
 									<h5>
-										Innovative Vapors
+										{{rec['business']['name']}}
 									</h5>
 									<div>
-										猜你给4.8分，
+										猜你给{{rec['stars']}}分，
 									</div>
 									<div>
-										属于 AA、BB、CC、DD，
+										属于
+										{%for cat in rec['business']['categories']%}
+											{{cat}},
+										{%end%}
+
 									</div>
 									<p>
-										位于 Tempe 城 UZ 洲，
+										位于 {{rec['business']['city']}} 城 {{rec['business']['state']}} 洲，
 									</p>
 									<p>
-										227 E Baseline Rd, Ste J2，
+										{{rec['business']['address']}}
 									</p>
 									<p>
-										被评论35次
+										被评论{{rec['business']['review_count']}}次
 									</p>
 									<p>
-										平均得分4.5分
+										平均得分{{rec['business']['stars']}}分
 									</p>
-									<p>
-										<a class="btn btn-primary" href="#">浏览</a> <a class="btn" href="#">分享</a>
+									<p style="display: none;">
+										<a class="btn btn-primary" href="#">更多</a> <a class="btn" href="#">分享</a>
 									</p>
 								</div>
 							</div>
 						</li>
+						{% end %}
 					</ul>
 				</div>
                 <div class="col-lg-3">
-					<ul class="thumbnails" style="list-style: none;">
+					<h3 style="margin:10px;padding:0px 0px;font-size:24px;">你的历史评分<small>评分由高到低</small></h3>
+					<ul class="thumbnails" style="list-style: none;padding:0px;">
+						{% for rec in hists%}
 						<li class="col-lg-12" style="padding: 15px;background: ghostwhite;">
 							<div class="thumbnail">
-								<img alt="400x300" src="{{static_url('img/subset00/0024xoavuUkD7LT9AWcVsw.jpg')}}" />
 								<div class="caption">
 									<h5>
-										Innovative Vapors
+										{{rec['business']['name']}}
 									</h5>
 									<div>
-										猜你给4.8分，
+										你给了{{rec['stars']}}分，
 									</div>
 									<div>
-										属于 AA、BB、CC、DD，
+										属于
+										{%for cat in rec['business']['categories']%}
+											{{cat}},
+										{%end%}
+
 									</div>
 									<p>
-										位于 Tempe 城 UZ 洲，
+										位于 {{rec['business']['city']}} 城 {{rec['business']['state']}} 洲，
 									</p>
 									<p>
-										227 E Baseline Rd, Ste J2，
+										{{rec['business']['address']}}
 									</p>
 									<p>
-										被评论35次
+										被评论{{rec['business']['review_count']}}次
 									</p>
 									<p>
-										平均得分4.5分
+										平均得分{{rec['business']['stars']}}分
 									</p>
-									<p>
-										<a class="btn btn-primary" href="#">浏览</a> <a class="btn" href="#">分享</a>
+									<p style="display: none;">
+										<a class="btn btn-primary" href="#">更多</a> <a class="btn" href="#">分享</a>
 									</p>
 								</div>
 							</div>
 						</li>
+						{% end %}
 					</ul>
 				</div>
 			</div>

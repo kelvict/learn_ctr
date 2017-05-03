@@ -111,7 +111,7 @@ def gen_server_data(user_limit = 10000, min_review_cnt=20):
 
 	user_size = len(uid_to_reviews.keys())
 	user_records = []
-	for i in xrange(len(min(user_limit, user_size))):
+	for i in xrange(min(user_limit, user_size)):
 		user_record = get_user_page_data(i, uid_to_reviews, uid_to_users, bid_to_businesses)
 		if user_record is not None:
 			user_records.append(user_record)
@@ -155,6 +155,7 @@ def get_user_page_data(i, limit_uid_to_reviews_map, uid_to_user_map, bid_to_busi
 		"rec_records":rec_records,
 		"visit_records":visit_records
 	}
+
 
 def get_business_attr_key_values(businesses):
 	key_to_option = {}

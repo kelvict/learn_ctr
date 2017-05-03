@@ -99,7 +99,7 @@ def get_server_data(is_test=False, min_reviews_cnt=20):
 def gen_server_data(user_limit = 10000, min_review_cnt=20):
 	reviews, users, businesses = get_reviews_users_businesses(False)
 	print "Data loaded"
-	reviews_5p_4p = [review for review in reviews if review['stars'] == 5 or reviews['stars'] == 4]
+	reviews_5p_4p = [review for review in reviews if review['stars'] == 5 or review['stars'] == 4]
 	uid_to_reviews = get_uid_to_reviews(reviews_5p_4p)
 	uid_to_users = get_uid_to_user_map(users)
 	bid_to_businesses = get_bid_to_business_map(businesses)

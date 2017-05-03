@@ -5,7 +5,7 @@ for conf_id in 1; do
 			for trainset_rate in 0.9 0.1; do
 				for n_embd in 100; do #100 is best now
 					for reg in 0.0001 0.00001; do #0.001 is best now
-						python criteo.py --ml --train  --gpu 1 \
+						python criteo.py --ml --train  --gpu 0 \
 						--conf_path ./conf/biased_MF_rate_${conf_id}.conf \
 						--params --lr ${lr} --n_embd ${n_embd} --reg ${reg}\
 						--data_suffix .${random_seed}_${trainset_rate} \

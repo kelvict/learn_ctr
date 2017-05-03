@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-for conf_id in 11; do
+for conf_id in 12; do
 	for lr in 0.00005; do
 		for width in 5 10; do
 			for n_embd in 50 75; do

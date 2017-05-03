@@ -15,7 +15,7 @@ if __name__ == "__main__":
 	parser.add_argument("--n_friend", type=int,default=100)
 	parser.add_argument("--output_suffix", type=str)
 	parser.add_argument("--gen_server_data", action="store_true")
-	parser.add_argument("--user_limit", action=int, default=10000)
+	parser.add_argument("--user_limit", type=int, default=10000)
 	#param
 	parser.add_argument("--params", action="store_true", help="params input")
 	parser.add_argument("--n_embd", type=int, help="embedding size")

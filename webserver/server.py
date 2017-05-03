@@ -40,10 +40,7 @@ class UserPageHandler(tornado.web.RequestHandler):
             decrement += abs(np.random.normal(0,0.03))
         visit_records = copy.deepcopy(user_page_data['visit_records'])
 
-
-
         self.render("user.html", user=user, recs=rec_records, hists=visit_records, uid=uid)
-
 
 def run_server(port):
     app = tornado.web.Application(
@@ -61,5 +58,6 @@ def run_server(port):
     http_server = tornado.httpserver.HTTPServer(app)
     http_server.listen(port)
     tornado.ioloop.IOLoop.instance().start()
+
 if __name__ == "__main__":
     run_server()

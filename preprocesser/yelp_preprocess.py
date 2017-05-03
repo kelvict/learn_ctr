@@ -15,6 +15,7 @@ academic_dataset_json_prefix = "yelp_academic_dataset_%s.json"
 from util.log import log_and_print
 import random
 import gc
+import copy
 
 def build_df(objs, keys):
 	df_dict = {}
@@ -95,6 +96,34 @@ def get_server_data(is_test=False, min_reviews_cnt=20):
 	bid_to_business_map = get_bid_to_business_map(businesses)
 	return limit_uid_to_reviews_map, uid_to_user_map, bid_to_business_map
 
+def gen_server_data(user_limit = 10000, min_review_cnt=20):
+	reviews, users, businesses = get_reviews_users_businesses(False)
+	print "Data loaded"
+	reviews_5p_4p = [review for review in reviews if review['stars'] == 5 or reviews['stars'] == 4]
+	uid_to_reviews = get_uid_to_reviews(reviews_5p_4p)
+	uid_to_users = get_uid_to_user_map(users)
+	bid_to_businesses = get_bid_to_business_map(businesses)
+	limit_uid_to_reviews = {}
+	if min_review_cnt > 0:
+		for key in uid_to_reviews:
+			if len(uid_to_reviews[key]) > min_review_cnt:
+				limit_uid_to_reviews[key] = uid_to_reviews[key]
+
+	user_size = len(uid_to_reviews.keys())
+	user_records = []
+	for i in xrange(len(min(user_limit, user_size))):
+		user_record = get_user_page_data(i, uid_to_reviews, uid_to_users, bid_to_businesses)
+		if user_record is not None:
+			user_records.append(user_record)
+		if i%10000 == 0:
+			print "%d user handled. Get %d users"%(i, len(user_records))
+	print "Get %d users. Dumping it."%(len(user_records))
+	server_data = {
+		"user_records":user_records,
+		"business_map":bid_to_businesses
+	}
+	joblib.dump(server_data, prefix + "server_data_%d.jbl")
+
 def get_user_page_data(i, limit_uid_to_reviews_map, uid_to_user_map, bid_to_business_map):
 	reviews = limit_uid_to_reviews_map[limit_uid_to_reviews_map.keys()[i%len(limit_uid_to_reviews_map.keys())]]
 	reviews = sorted(reviews, key=lambda d:d['date'])
@@ -102,25 +131,30 @@ def get_user_page_data(i, limit_uid_to_reviews_map, uid_to_user_map, bid_to_busi
 	review_records = []
 
 	for review in reviews:
-		review['business'] = bid_to_business_map[review['business_id']]
-		review_records.append(review)
+		review_records.append(copy.deepcopy(review))
 
 	visit_records = []
 	rec_records = []
 	records_size = len(review_records)
 	if records_size <= 10:
-		rec_records = review_records
+		return None
+	elif records_size > 10 and records_size < 20:
+		rec_records = review_records[-10:]
+		visit_records = review_records[:-10]
 	else:
 		rec_records = review_records[-10:]
 		visit_records = review_records[-20:-10]
 
+	decrement = abs(np.random.normal(0, 0.03))
+	for i in xrange(len(rec_records)):
+		rec_records[i]['pred_stars'] = "%.3f"%(5-decrement)
+		decrement += abs(np.random.normal(0,0.03))
 
 	return {
 		'user':user,
 		"rec_records":rec_records,
 		"visit_records":visit_records
 	}
-
 
 def get_business_attr_key_values(businesses):
 	key_to_option = {}

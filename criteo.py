@@ -14,6 +14,8 @@ if __name__ == "__main__":
 	parser.add_argument("--yelp", action="store_true")
 	parser.add_argument("--n_friend", type=int,default=100)
 	parser.add_argument("--output_suffix", type=str)
+	parser.add_argument("--gen_server_data", action="store_true")
+	parser.add_argument("--user_limit", action=int, default=10000)
 	#param
 	parser.add_argument("--params", action="store_true", help="params input")
 	parser.add_argument("--n_embd", type=int, help="embedding size")
@@ -37,7 +39,7 @@ if __name__ == "__main__":
 	parser.add_argument("--drop_contin_feat", action="store_true", help="drop contine feature")
 	#Split trainset and testset
 	parser.add_argument("--split_train_test", action="store_true")
-	parser.add_argument("--dataset_path", type=str,)
+	parser.add_argument("--dataset_path", type=str)
 	parser.add_argument("--labels_path", type=str, help="set labels path")
 	parser.add_argument("--trainset_rate", type=float)
 	parser.add_argument("--traindata_dump_path", type=str)
@@ -104,6 +106,9 @@ if __name__ == "__main__":
 					criteo_train.train_model_with_conf(
 						conf_path, grid_param_conf_path=grid_param_conf_path,
 						ctr_or_recommend=False, predict_batch_size=10000, params=params)
+		elif args.gen_server_data:
+			from preprocesser import yelp_preprocess
+			yelp_preprocess.gen_server_data(args.user_limit)
 	elif args.ml:
 		if args.preprocess:
 			from preprocesser import movielens_preprocess

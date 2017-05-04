@@ -331,6 +331,7 @@ def train(model, trainset_csr_pkl_path, labels_pkl_path=None, testset_csr_pkl_pa
         json.dump(json_log, fo, indent=True, default=util.json_util.json_numpy_serialzer)
         fo.close()
         util.log.log("log json in %s"%train_log_path)
+    return model
 
 def predict(model, eval_data, batch_size=100000):
     preds = []
@@ -349,6 +350,8 @@ def predict(model, eval_data, batch_size=100000):
     util.log.log("Stack Prediction Result")
     preds = np.vstack(preds)
     return preds
+
+
 
 def init_var(method, shape, dtype=np.float32, **kwargs):
     if method == "zero":

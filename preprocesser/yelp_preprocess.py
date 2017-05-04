@@ -337,6 +337,7 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 		user_mats.append(preproc.get_csr_mat_from_exclusive_field(yelp_time_info_df[key]))
 
 	uids = users_df['user_id'].values.tolist()
+	joblib.dump(uids, prefix+"raw_uids.pkl")
 
 	del users_df
 	del yelp_time_info_df
@@ -346,6 +347,15 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 	uids_to_idx = {}
 	for i in xrange(len(uids)):
 		uids_to_idx[uids[i]] = i
+
+	name = "raw_user"
+	log_and_print("Dumping %s"%name)
+	dataset = user_mats
+	field_sizes = preproc.get_field_sizes(dataset)
+	joblib.dump(field_sizes, field_sizes_output_pattern%name)
+	joblib.dump(dataset, csr_mats_output_pattern%name)
+
+	#reorder business mats from raw business data to business in reviews mats
 	for i in xrange(len(user_mats)):
 		user_mats[i] = preproc.join_expand(user_mats[i], ruids, uids_to_idx)
 
@@ -387,7 +397,7 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 	business_mats.append(preproc.get_csr_mat_from_contin_field(businesses_df['latitude'], n_interval=100))
 	business_mats.append(preproc.get_csr_mat_from_contin_field(businesses_df['review_count'], n_interval=30))
 	bids = businesses_df['business_id'].values.tolist()
-
+	joblib.dump(bids, prefix+"raw_bids.pkl")
 	del businesses_df
 	del business_attr_df
 	gc.collect()
@@ -396,13 +406,33 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 	bids_to_idx = {}
 	for i in xrange(len(bids)):
 		bids_to_idx[bids[i]] = i
+
+	name = "raw_business"
+	log_and_print("Dumping %s"%name)
+	dataset = business_mats
+	field_sizes = preproc.get_field_sizes(dataset)
+	joblib.dump(field_sizes, field_sizes_output_pattern%name)
+	joblib.dump(dataset, csr_mats_output_pattern%name)
+
+	#reorder business mats from raw business data to business in reviews mats
 	for i in xrange(len(business_mats)):
 		business_mats[i] = preproc.join_expand(business_mats[i], rbids, bids_to_idx)
-
 
 	name = "rate"
 	log_and_print("Dumping %s"%name)
 	dataset = rate_mats
+	field_sizes = preproc.get_field_sizes(dataset)
+	joblib.dump(field_sizes, field_sizes_output_pattern%name)
+	joblib.dump(dataset, csr_mats_output_pattern%name)
+	preproc.split_train_test_data(
+		csr_mats_output_pattern%name, label_output_path,
+		trainset_rate,
+		train_data_output_pattern%name, test_data_output_pattern%name
+	)
+
+	name = "rate_user_business"
+	log_and_print("Dumping %s"%name)
+	dataset = rate_mats + user_mats + business_mats
 	field_sizes = preproc.get_field_sizes(dataset)
 	joblib.dump(field_sizes, field_sizes_output_pattern%name)
 	joblib.dump(dataset, csr_mats_output_pattern%name)
@@ -423,12 +453,3 @@ def preprocess(random_seed=0, trainset_rate=0.9, is_test=False, n_friend_sample=
 		trainset_rate,
 		train_data_output_pattern%name, test_data_output_pattern%name
 	)
-
-
-
-
-
-
-
-
-

@@ -12,8 +12,8 @@ import time
 import copy
 
 from model.product_nets import LR, FM, FNN, CCPM, PNN1, PNN2, RecIPNN, biasedMF
-
-
+from scipy.sparse import vstack
+from util import preprocess as preproc
 CRITEO_MODELS = [LR, FM, FNN, CCPM, PNN1, PNN2, RecIPNN, biasedMF]
 SPLIT_BY_FIELD_MODELS = [FNN, CCPM, PNN1, PNN2, RecIPNN, biasedMF]
 CTR_MODELS = [LR, FM, FNN, CCPM, PNN1, PNN2]
@@ -122,6 +122,42 @@ def train_model_with_conf(conf_path, grid_param_conf_path=None, ctr_or_recommend
 				if conf['should_dump_model']:
 					model.dump(conf["model_dump_path"])
 				break
+
+def predict_candidate(model, n_user_limit, n_candidate, batch_size=100000):
+	rating_mats = None
+	raw_user_mats = None
+	raw_business_mats = None
+
+	uid_2_bid_set = None
+
+	raw_uids = None
+	raw_bids = None
+
+	limit_uids = None
+	uid_2_raw_idx = None
+	business_num = raw_business_mats[0].shape[0]
+	uid_to_candidates = {}
+	for uid in (limit_uids):
+		user_rows = [mat[uid_2_raw_idx[uid]] for mat in raw_user_mats]
+		cur_uids = [uid] * business_num
+		cur_user_mats = [vstack([row] * business_num) for row in user_rows]
+		cur_rating_mats = []
+		for ids in [cur_uids, raw_bids]:
+			cur_rating_mats.append(preproc.get_csr_mat_from_exclusive_field(ids))
+		dataset = [cur_rating_mats, cur_user_mats, raw_business_mats]
+		preds = util.train.predict(model, dataset, batch_size)
+		pred_pairs = [(raw_bids[i], preds[i]) for i in xrange(len(preds))]
+		sorted(pred_pairs,key=lambda x: x[2], reverse=True)
+		exist_bid_set = uid_2_bid_set[uid]
+		candidates = []
+		for pair in pred_pairs:
+			if len(candidates) >= n_candidate:
+				break
+			if pair not in exist_bid_set:
+				candidates.append(pair)
+		uid_to_candidates[uid] = candidates
+	return uid_to_candidates
+
 
 if __name__ == "__main__":
 	test_dfs_make_confs()

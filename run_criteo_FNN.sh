@@ -1,2 +1,5 @@
 #!/usr/bin/env bash
-python criteo.py --train --gpu 0 --conf_path ./conf/FNN.conf 1>criteo_train_FNN.log 2>&1
+
+for i in `seq 1 3`; do
+	python criteo.py --train --gpu 0 --conf_path ./conf/FNN_${i}.conf 1>criteo_train_FNN_${i}.log 2>&1
+done

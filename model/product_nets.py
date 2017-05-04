@@ -160,9 +160,9 @@ class FNN(BaseModel):
             b0 = [self.vars['b0_%d' % i] for i in range(num_inputs)]
             l = tf.nn.dropout(
                 train_util.activate(
-                    tf.concat(1, [
+                    tf.concat([
                         tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) + b0[i]
-                        for i in range(num_inputs)]),
+                        for i in range(num_inputs)], 1),
                     layer_acts[0]),
                 layer_keeps[0])
 
@@ -246,9 +246,9 @@ class CCPM(BaseModel):
             b0 = [self.vars['b0_%d' % i] for i in range(num_inputs)]
             l = tf.nn.dropout(
                 train_util.activate(
-                    tf.concat(1, [
+                    tf.concat([
                         tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) + b0[i]
-                        for i in range(num_inputs)]),
+                        for i in range(num_inputs)], 1),
                     layer_acts[0]),
                 layer_keeps[0])
             l = tf.transpose(tf.reshape(l, [-1, num_inputs, embedding_order, 1]), [0, 2, 1, 3])
@@ -358,9 +358,9 @@ class PNN1(BaseModel):
             b0 = [self.vars['b0_%d' % i] for i in range(num_inputs)]
             l = tf.nn.dropout(
                 train_util.activate(
-                    tf.concat(1, [
+                    tf.concat([
                         tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) + b0[i] #transform to embedding
-                        for i in range(num_inputs)]),
+                        for i in range(num_inputs)], 1),
                     layer_acts[0]),
                 layer_keeps[0])
             layers.append(l)
@@ -550,7 +550,7 @@ class RecIPNN(BaseModel):
                                   for i in range(num_inputs)[-prev_item_vec_cnt:]])
             l = tf.nn.dropout(
                 train_util.activate(
-                    tf.concat(1, embd_vecs),
+                    tf.concat(embd_vecs, 1),
                     layer_acts[0]),
                 layer_keeps[0])
             layers.append(l)
@@ -713,7 +713,7 @@ class biasedMF(BaseModel):
             bias1 = tf.sparse_tensor_dense_matmul(self.X[1], b1)
             if log_exp_product:
                 w2 = self.vars['w2']
-                self.y_prob = tf.exp(tf.matmul(tf.concat(1, [embd0, embd1]), w2))
+                self.y_prob = tf.exp(tf.matmul(tf.concat([embd0, embd1], 1), w2))
             else:
                 self.y_prob = tf.reshape(tf.reduce_sum(tf.mul(embd0, embd1), 1), [-1, 1])
             print self.y_prob
@@ -790,9 +790,9 @@ class PNN2(BaseModel):
             b0 = [self.vars['b0_%d' % i] for i in range(num_inputs)]
             l = tf.nn.dropout(
                 train_util.activate(
-                    tf.concat(1, [ #concat to #field * emb_dim 39 * 10
+                    tf.concat([ #concat to #field * emb_dim 39 * 10
                         tf.sparse_tensor_dense_matmul(self.X[i], w0[i]) + b0[i] # transform to embedding [#field, emb_dim] [39, 10]
-                        for i in range(num_inputs)]),
+                        for i in range(num_inputs)], 1),
                     layer_acts[0]),
                 layer_keeps[0])
             w1 = self.vars['w1']

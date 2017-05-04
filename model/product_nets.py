@@ -34,7 +34,7 @@ class LR(BaseModel):
             self.y_prob = tf.sigmoid(logits)
 
             self.loss = tf.reduce_mean(
-                tf.nn.sigmoid_cross_entropy_with_logits(logits, self.y)) + \
+                tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=self.y)) + \
                         l2_weight * tf.nn.l2_loss(w)
             self.optimizer = train_util.get_optimizer(opt_algo, learning_rate, self.loss)
 
@@ -95,7 +95,7 @@ class FM(BaseModel):
             self.y_prob = tf.sigmoid(logits)
 
             self.loss = tf.reduce_mean(
-                tf.nn.sigmoid_cross_entropy_with_logits(logits, self.y)) + \
+                tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=self.y)) + \
                         l2_w * tf.nn.l2_loss(w) + \
                         l2_v * tf.nn.l2_loss(v)
             self.optimizer = train_util.get_optimizer(opt_algo, learning_rate, self.loss)
@@ -178,7 +178,7 @@ class FNN(BaseModel):
             self.y_prob = tf.sigmoid(l)
 
             self.loss = tf.reduce_mean(
-                tf.nn.sigmoid_cross_entropy_with_logits(l, self.y))
+                tf.nn.sigmoid_cross_entropy_with_logits(logits=l, labels=self.y))
             if layer_l2 is not None:
                 for i in range(num_inputs):
                     self.loss += layer_l2[0] * tf.nn.l2_loss(w0[i])
@@ -281,7 +281,7 @@ class CCPM(BaseModel):
             self.y_prob = tf.sigmoid(l)
 
             self.loss = tf.reduce_mean(
-                tf.nn.sigmoid_cross_entropy_with_logits(l, self.y))
+                tf.nn.sigmoid_cross_entropy_with_logits(logits=l, labels=self.y))
             self.optimizer = train_util.get_optimizer(opt_algo, learning_rate, self.loss)
 
             config = tf.ConfigProto()
@@ -418,7 +418,7 @@ class PNN1(BaseModel):
                 print i, layers
             self.y_prob = tf.sigmoid(l)
             self.loss = tf.reduce_mean(
-                tf.nn.sigmoid_cross_entropy_with_logits(l, self.y))
+                tf.nn.sigmoid_cross_entropy_with_logits(logits=l, labels=self.y))
             if layer_l2 is not None:
                 for i in range(num_inputs):
                     self.loss += layer_l2[0] * tf.nn.l2_loss(w0[i])
@@ -822,7 +822,7 @@ class PNN2(BaseModel):
             self.y_prob = tf.sigmoid(l)
 
             self.loss = tf.reduce_mean(
-                tf.nn.sigmoid_cross_entropy_with_logits(l, self.y))
+                tf.nn.sigmoid_cross_entropy_with_logits(logits=l, labels=self.y))
             if layer_l2 is not None:
                 for i in range(num_inputs):
                     self.loss += layer_l2[0] * tf.nn.l2_loss(w0[i])

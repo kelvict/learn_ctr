@@ -497,7 +497,7 @@ def max_pool_2d(params, k):
     r1 = tf.reshape(tf.range(shape[0]), [-1, 1])
     r1 = tf.tile(r1, [1, k])
     r1 = tf.reshape(r1, [-1, 1])
-    indices = tf.concat(1, [r1, tf.reshape(indices, [-1, 1])])
+    indices = tf.concat([r1, tf.reshape(indices, [-1, 1])], 1)
     return tf.reshape(gather_2d(params, indices), [-1, k])
 
 
@@ -510,7 +510,7 @@ def max_pool_3d(params, k):
     r2 = tf.tile(r2, [1, k])
     r1 = tf.reshape(r1, [-1, 1])
     r2 = tf.tile(tf.reshape(r2, [-1, 1]), [shape[0], 1])
-    indices = tf.concat(1, [r1, r2, tf.reshape(indices, [-1, 1])])
+    indices = tf.concat([r1, r2, tf.reshape(indices, [-1, 1])], 1)
     return tf.reshape(gather_3d(params, indices), [-1, shape[1], k])
 
 
@@ -526,5 +526,5 @@ def max_pool_4d(params, k):
     r1 = tf.reshape(r1, [-1, 1])
     r2 = tf.tile(tf.reshape(r2, [-1, 1]), [shape[0], 1])
     r3 = tf.tile(tf.reshape(r3, [-1, 1]), [shape[0] * shape[1], 1])
-    indices = tf.concat(1, [r1, r2, r3, tf.reshape(indices, [-1, 1])])
+    indices = tf.concat([r1, r2, r3, tf.reshape(indices, [-1, 1])], 1)
     return tf.reshape(gather_4d(params, indices), [-1, shape[1], shape[2], k])

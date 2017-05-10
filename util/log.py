@@ -27,6 +27,7 @@ def config_log(log_path_prefix):
     logger.addHandler(console)
     log("pid: %s"%str(os.getpid()))
     return time_str
+
 def log(msg):
     logging.info(str(msg))
 
@@ -35,6 +36,10 @@ def log_and_print(msg):
     time_str = time.strftime("%Y%m%d_%H%M%S")
     print "[%s] %s"%(time_str, msg)
     sys.stdout.flush()
+
+def print_with_time(msg):
+    time_str = time.strftime("%Y%m%d_%H%M%S")
+    print "[%s] %s"%(time_str, msg)
 
 def now_str():
     return time.strftime("%Y%m%d_%H%M%S")

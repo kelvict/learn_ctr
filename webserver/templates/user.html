@@ -106,34 +106,36 @@
 						<div class="thumbnail grid-item" style="width: 280px">
 							<div class="caption">
 								<h5>
-									{{rec['business']['name']}}
+									{{rec['name']}}
 								</h5>
 								<div>
 									猜你给{{rec['stars']}}分，
 								</div>
+								{%if rec[u'categories'] is not None%}
 								<div>
 									属于
-									{%for cat in rec['business']['categories']%}
+									{%for cat in rec['categories']%}
 										{{cat}},
 									{%end%}
 
 								</div>
+								{%end%}
 								<p>
-									位于 {{rec['business']['city']}} 城 {{rec['business']['state']}} 洲，
+									位于 {{rec['city']}} 城 {{rec['state']}} 洲，
 								</p>
 								<p>
-									{{rec['business']['address']}}
+									{{rec['address']}}
 								</p>
-								{%if rec['business'][u'neighborhood']!=""%}
+								{%if rec[u'neighborhood']!=""%}
 								<p>
-									邻近{{rec['business'][u'neighborhood']}}
+									邻近{{rec[u'neighborhood']}}
 								</p>
 								{%end%}
 								<p>
-									被评论{{rec['business']['review_count']}}次
+									被评论{{rec['review_count']}}次
 								</p>
 								<p>
-									平均得分{{rec['business']['stars']}}分
+									平均得分{{rec['stars']}}分
 								</p>
 								<p style="display: none;">
 									<a class="btn btn-primary" href="#">更多</a> <a class="btn" href="#">分享</a>
@@ -148,29 +150,31 @@
 							<div class="thumbnail">
 								<div class="caption">
 									<h5>
-										{{rec['business']['name']}}
+										{{rec['name']}}
 									</h5>
 									<div>
 										猜你给{{rec['stars']}}分，
 									</div>
+									{%if rec[u'categories'] is not None%}
 									<div>
 										属于
-										{%for cat in rec['business']['categories']%}
+										{%for cat in rec['categories']%}
 											{{cat}},
 										{%end%}
 
 									</div>
+									{%end%}
 									<p>
-										位于 {{rec['business']['city']}} 城 {{rec['business']['state']}} 洲，
+										位于 {{rec['city']}} 城 {{rec['state']}} 洲，
 									</p>
 									<p>
-										{{rec['business']['address']}}
+										{{rec['address']}}
 									</p>
 									<p>
-										被评论{{rec['business']['review_count']}}次
+										被评论{{rec['review_count']}}次
 									</p>
 									<p>
-										平均得分{{rec['business']['stars']}}分
+										平均得分{{rec['stars']}}分
 									</p>
 									<p style="display: none;">
 										<a class="btn btn-primary" href="#">更多</a> <a class="btn" href="#">分享</a>

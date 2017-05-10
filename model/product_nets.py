@@ -598,7 +598,7 @@ class RecIPNN(BaseModel):
                         [-1, factor_order, layer_sizes[2]]),
                     1)
             #TODO
-            #svd_score = tf.reduce_sum(tf.mul(tf.reshape(feat1_emb_mat,[-1,factor_order]), tf.reshape(feat2_emb_mat,[-1,factor_order])), 1)
+            #svd_score = tf.reduce_sum(tf.multiply(tf.reshape(feat1_emb_mat,[-1,factor_order]), tf.reshape(feat2_emb_mat,[-1,factor_order])), 1)
             svd_score = tf.batch_matmul(feat1_emb_mat,tf.transpose(feat2_emb_mat,(0, 2, 1)))
             svd_score = tf.reshape(svd_score,[-1,1])
             print "svd_score: ",svd_score
@@ -715,7 +715,7 @@ class biasedMF(BaseModel):
                 w2 = self.vars['w2']
                 self.y_prob = tf.exp(tf.matmul(tf.concat([embd0, embd1], 1), w2))
             else:
-                self.y_prob = tf.reshape(tf.reduce_sum(tf.mul(embd0, embd1), 1), [-1, 1])
+                self.y_prob = tf.reshape(tf.reduce_sum(tf.multiply(embd0, embd1), 1), [-1, 1])
             print self.y_prob
             self.y_prob = tf.add(self.y_prob, bg)
             print self.y_prob
@@ -726,7 +726,7 @@ class biasedMF(BaseModel):
             regularizer = tf.add(tf.nn.l2_loss(embd0), tf.nn.l2_loss(embd1), name='svd_regularizer')
             self.loss = tf.sqrt(tf.nn.l2_loss(tf.subtract(self.y_prob, self.y)))
             penalty = tf.constant(reg_rate, dtype=tf.float32, shape=[], name="l2")
-            self.loss = tf.add(self.loss, tf.mul(regularizer,penalty))
+            self.loss = tf.add(self.loss, tf.multiply(regularizer,penalty))
             self.optimizer = train_util.get_optimizer(opt_algo, learning_rate, self.loss)
 
             config = tf.ConfigProto()

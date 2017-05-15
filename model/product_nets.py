@@ -579,7 +579,7 @@ class RecIPNN(BaseModel):
                 feat_emb_mat = tf.reshape(l, [-1, num_inputs, factor_order])
                 feat1_emb_mat = tf.slice(feat_emb_mat, [0, 0, 0], [-1, 1, factor_order])
                 feat2_emb_mat = tf.slice(feat_emb_mat, [0, 1, 0], [-1, 1, factor_order])
-                feat_sim_vec = tf.reshape(tf.batch_matmul(
+                feat_sim_vec = tf.reshape(tf.matmul(
                     feat_emb_mat,tf.transpose(feat_emb_mat,[0,2,1])),[-1, num_inputs * num_inputs])
                 p = tf.matmul(feat_sim_vec,k1)
             else:

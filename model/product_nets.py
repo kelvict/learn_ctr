@@ -383,7 +383,7 @@ class PNN1(BaseModel):
             elif p_mode == 1:
                 #slower inner product
                 feat_emb_mat = tf.reshape(l, [-1, num_inputs, factor_order])
-                feat_sim_vec = tf.reshape(tf.batch_matmul(
+                feat_sim_vec = tf.reshape(tf.matmul(
                     feat_emb_mat,tf.transpose(feat_emb_mat,[0,2,1])),[-1, num_inputs * num_inputs])
                 p = tf.matmul(feat_sim_vec,k1)
             else:
@@ -599,7 +599,7 @@ class RecIPNN(BaseModel):
                     1)
             #TODO
             #svd_score = tf.reduce_sum(tf.multiply(tf.reshape(feat1_emb_mat,[-1,factor_order]), tf.reshape(feat2_emb_mat,[-1,factor_order])), 1)
-            svd_score = tf.batch_matmul(feat1_emb_mat,tf.transpose(feat2_emb_mat,(0, 2, 1)))
+            svd_score = tf.matmul(feat1_emb_mat,tf.transpose(feat2_emb_mat,(0, 2, 1)))
             svd_score = tf.reshape(svd_score,[-1,1])
             print "svd_score: ",svd_score
             embed_layer = tf.matmul(l, w1) + b1 + p
@@ -800,7 +800,7 @@ class PNN2(BaseModel):
             b1 = self.vars['b1']
             z = tf.reduce_sum(tf.reshape(l, [-1, num_inputs, factor_order]), 1) # sum all embed of embed dim -> (emb_dim,)
             p = tf.reshape(
-                tf.batch_matmul(
+                tf.matmul(
                     tf.reshape(z, [-1, factor_order, 1]),
                     tf.reshape(z, [-1, 1, factor_order])),
                 [-1, factor_order * factor_order])

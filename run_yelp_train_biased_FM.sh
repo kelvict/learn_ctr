@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 for conf_id in 1; do
-	for lr in 0.0002; do
+	for lr in 0.005; do
 		for random_seed in `seq 0 0`; do
 			for trainset_rate in 0.9; do
 				for n_embd in 75 100 50; do #100 is best now

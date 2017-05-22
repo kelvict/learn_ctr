@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <title>Yelp 商户推荐系统 用户#0001</title>
+    <title>Yelp 商户推荐系统 用户 No.{{uid}}</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
@@ -109,7 +109,7 @@
 									{{rec['name']}}
 								</h5>
 								<div>
-									猜你给{{rec['stars']}}分，
+									猜你给{{rec['rec_stars']}}分，
 								</div>
 								{%if rec[u'categories'] is not None%}
 								<div>

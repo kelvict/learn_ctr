@@ -30,9 +30,10 @@ class UserPageHandler(tornado.web.RequestHandler):
             uid = random.randint(1,100000)
             self.redirect("/user?uid=%d"%uid)
         d = database.get_page_data(int(uid))
+
         self.render("user.html", user=d['user'], recs=d['rec_businesses'], hists=d['hist_reviews'], uid=uid)
 
-def run_server(port):
+def run_server(port=8099):
     app = tornado.web.Application(
 	    handlers=[(r'/', IndexHandler), (r'/user', UserPageHandler), (r'/search', SearchHandler)],
 	    template_path=os.path.join(os.path.dirname(__file__), "templates"),
@@ -50,4 +51,4 @@ def run_server(port):
     tornado.ioloop.IOLoop.instance().start()
 
 if __name__ == "__main__":
-    run_server()
+    run_server(8099)

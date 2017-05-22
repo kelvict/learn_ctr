@@ -5,6 +5,7 @@
 
 import pymongo
 import json
+import numpy as np
 from util.log import log_and_print
 prefix = "dataset/recommend/yelp/"
 academic_dataset_json_prefix = "yelp_academic_dataset_%s.json"
@@ -80,15 +81,17 @@ def insert_recommendations(db):
 			})
 			if i % 10000 == 0:
 				log_and_print("Insert recommendation %d" % i)
-		except Exception,e :
+		except Exception, e:
 			print e
 			print line
+
+
 
 
 def get_page_data(u_idx):
 	db = get_db()
 	rec_result = db.recommendations.find_one({'_id':u_idx})
-	user = db.user.find_one({'user_id':rec['user_id']})
+	user = db.users.find_one({'user_id':rec_result['user_id']})
 	hist_reviews = db.reviews.find({'user_id':user['user_id']}).sort("stars", pymongo.DESCENDING).limit(10)
 	hist_reviews = [r for r in hist_reviews]
 	hist_businesses = [db.businesses.find_one({'business_id':review['business_id']}) for review in hist_reviews]
@@ -100,8 +103,19 @@ def get_page_data(u_idx):
 	rec_businesses = [db.businesses.find_one({'business_id':pair[0]}) for pair in pairs]
 	rec_scores = [pair[1] for pair in pairs]
 
+	max_rec_stars = float(rec_scores[0])
+	print max_rec_stars, max_rec_stars-5
 	for i in xrange(len(rec_businesses)):
-		rec_businesses[i]['stars'] = round(float(max(min(rec_scores[i] ,5) ,1)),2)
+		rec_businesses[i]['rec_stars'] = round(float(max(min(5*float(rec_scores[i])/max(5, max_rec_stars) ,5) ,1)),3)
+	if max_rec_stars < 4 and rec_businesses[0]['rec_stars'] == rec_businesses[8]['rec_stars']:
+		add = 0
+		np.random.seed(u_idx)
+		add_arr = [abs(np.random.normal(0,0.02)) for i in range(len(rec_businesses))]
+		for i in reversed(range(len(rec_businesses))):
+			add += add_arr[i]
+			rec_businesses[i]['rec_stars'] += add
+			rec_businesses[i]['rec_stars'] = min(5, rec_businesses[i]['rec_stars'])
+			rec_businesses[i]['rec_stars'] = round(rec_businesses[i]['rec_stars'], 3)
 	page_data = {
 		"user":user,
 		"hist_reviews":hist_reviews,
